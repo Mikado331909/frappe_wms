@@ -83,14 +83,54 @@ class BatchLocationStock(Document):
             )
 
 
+@frappe.whitelist()
+def move_stock(source_name, to_location, qty):
+    """
+    Move qty from one Batch Location Stock record to another location.
+    Creates a proper Batch Location Movement audit record.
+    Called from the form button.
+    """
+    from frappe_wms.wms.events.utils import move_location_qty
+
+    qty = frappe.utils.flt(qty)
+    src = frappe.get_doc("Batch Location Stock", source_name)
+    move_location_qty(
+        item_code=src.item_code,
+        batch_no=src.batch_no,
+        warehouse=src.warehouse,
+        from_location=src.storage_location,
+        to_location=to_location,
+        qty=qty,
+        ref_doctype="Batch Location Stock",
+        ref_name=source_name,
+    )
+    return _("Moved {0} units to {1}.").format(frappe.utils.flt(qty, 3), to_location)
+
+
 def _get_erpnext_batch_qty(item_code, batch_no, warehouse):
+    """
+    Get actual batch qty from ERPNext Stock Ledger Entry.
+
+    Handles both:
+    - ERPNext <= v15: batch_no stored directly on SLE
+    - ERPNext v16:   batch tracked via Serial and Batch Bundle
+    """
     result = frappe.db.sql(
         """
-        SELECT COALESCE(SUM(actual_qty), 0)
-        FROM `tabStock Ledger Entry`
-        WHERE item_code = %s AND batch_no = %s AND warehouse = %s
-          AND is_cancelled = 0
-    """,
-        (item_code, batch_no, warehouse),
+        SELECT COALESCE(SUM(sle.actual_qty), 0)
+        FROM `tabStock Ledger Entry` sle
+        WHERE sle.item_code = %(item_code)s
+          AND sle.warehouse  = %(warehouse)s
+          AND sle.is_cancelled = 0
+          AND (
+            sle.batch_no = %(batch_no)s
+            OR EXISTS (
+                SELECT 1 FROM `tabSerial and Batch Entry` sbe
+                WHERE sbe.parent   = sle.serial_and_batch_bundle
+                  AND sbe.batch_no = %(batch_no)s
+            )
+          )
+        """,
+        {"item_code": item_code, "warehouse": warehouse, "batch_no": batch_no},
     )
     return frappe.utils.flt(result[0][0]) if result else 0.0

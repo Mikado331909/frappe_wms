@@ -7,11 +7,44 @@ Rules
 * These functions are the only permitted writers of Batch Location Stock rows —
   manual UI saves go through BatchLocationStock.validate() instead.
 * `raise_if_missing=False` lets callers skip silently for non-WMS warehouses.
+
+ERPNext v16 note
+----------------
+v16 tracks batches via "Serial and Batch Bundle" (child: "Serial and Batch Entry")
+instead of a direct batch_no field on transaction items.  Use
+`iter_batch_entries(item)` to transparently handle both old and new style.
 """
 
 import frappe
 from frappe import _
 from frappe.utils import nowdate, nowtime, flt
+
+
+# ---------------------------------------------------------------------------
+# ERPNext v16 Serial and Batch Bundle helper
+# ---------------------------------------------------------------------------
+
+
+def iter_batch_entries(item):
+    """
+    Yield (batch_no, qty) pairs for a transaction item row.
+
+    Handles both:
+      - ERPNext <=15 style: item.batch_no + item.qty
+      - ERPNext v16 style:  item.serial_and_batch_bundle -> Serial and Batch Entry rows
+    """
+    bundle = getattr(item, "serial_and_batch_bundle", None)
+    if bundle:
+        entries = frappe.db.get_all(
+            "Serial and Batch Entry",
+            filters={"parent": bundle},
+            fields=["batch_no", "qty"],
+        )
+        for e in entries:
+            if e.batch_no and flt(e.qty) != 0:
+                yield e.batch_no, abs(flt(e.qty))
+    elif getattr(item, "batch_no", None):
+        yield item.batch_no, flt(item.qty)
 
 
 # ---------------------------------------------------------------------------
@@ -110,10 +143,7 @@ def add_location_qty(
 def deduct_location_qty(
     item_code, batch_no, warehouse, storage_location, qty, ref_doctype, ref_name
 ):
-    """Reduce a Batch Location Stock row and record the movement.
-
-    Raises ValidationError if the row does not exist or has insufficient qty.
-    """
+    """Reduce a Batch Location Stock row and record the movement."""
     qty = flt(qty)
     if qty <= 0:
         return
@@ -184,7 +214,6 @@ def move_location_qty(
     if qty <= 0:
         return
 
-    # --- source ---
     src = frappe.db.get_value(
         "Batch Location Stock",
         {
@@ -198,9 +227,9 @@ def move_location_qty(
     )
     if not src:
         frappe.throw(
-            _(
-                "No stock in location {0} for Item {1} Batch {2}."
-            ).format(from_location, item_code, batch_no)
+            _("No stock in location {0} for Item {1} Batch {2}.").format(
+                from_location, item_code, batch_no
+            )
         )
     if flt(src.qty) < qty - 0.001:
         frappe.throw(
@@ -215,11 +244,8 @@ def move_location_qty(
                 batch_no,
             )
         )
-    frappe.db.set_value(
-        "Batch Location Stock", src.name, "qty", flt(src.qty) - qty
-    )
+    frappe.db.set_value("Batch Location Stock", src.name, "qty", flt(src.qty) - qty)
 
-    # --- destination ---
     dst = frappe.db.get_value(
         "Batch Location Stock",
         {
@@ -232,9 +258,7 @@ def move_location_qty(
         as_dict=True,
     )
     if dst:
-        frappe.db.set_value(
-            "Batch Location Stock", dst.name, "qty", flt(dst.qty) + qty
-        )
+        frappe.db.set_value("Batch Location Stock", dst.name, "qty", flt(dst.qty) + qty)
     else:
         uom = frappe.db.get_value("Item", item_code, "stock_uom")
         new_doc = frappe.get_doc(

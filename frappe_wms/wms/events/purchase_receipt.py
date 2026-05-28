@@ -11,7 +11,7 @@ def on_submit(doc, method=None):
     if not frappe.db.get_single_value("WMS Settings", "auto_create_on_receipt"):
         return
     for item in doc.items:
-        warehouse = item.t_warehouse or item.warehouse or doc.set_warehouse
+        warehouse = item.warehouse or doc.set_warehouse
         if not warehouse:
             continue
         receiving_loc = get_receiving_location(warehouse, raise_if_missing=False)
@@ -34,7 +34,7 @@ def on_cancel(doc, method=None):
     if not frappe.db.get_single_value("WMS Settings", "auto_create_on_receipt"):
         return
     for item in doc.items:
-        warehouse = item.t_warehouse or item.warehouse or doc.set_warehouse
+        warehouse = item.warehouse or doc.set_warehouse
         if not warehouse:
             continue
         receiving_loc = get_receiving_location(warehouse, raise_if_missing=False)

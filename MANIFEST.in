@@ -1,0 +1,2 @@
+include requirements.txt
+recursive-include frappe_wms *.json *.js *.css *.html *.py

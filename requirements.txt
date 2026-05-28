@@ -1,0 +1,1 @@
+# frappe and erpnext are installed separately as the platform

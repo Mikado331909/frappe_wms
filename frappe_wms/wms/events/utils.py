@@ -32,8 +32,19 @@ def iter_batch_entries(item):
     Handles both:
       - ERPNext <=15 style: item.batch_no + item.qty
       - ERPNext v16 style:  item.serial_and_batch_bundle -> Serial and Batch Entry rows
+
+    ERPNext v16 creates the Serial and Batch Bundle during its own on_submit,
+    so the in-memory item object may not have it yet — we re-read from DB.
     """
+    # In-memory value (may be None if bundle was just created during submit)
     bundle = getattr(item, "serial_and_batch_bundle", None)
+
+    # Re-read from DB if not set in memory
+    if not bundle and getattr(item, "name", None) and getattr(item, "doctype", None):
+        bundle = frappe.db.get_value(
+            item.doctype, item.name, "serial_and_batch_bundle"
+        )
+
     if bundle:
         entries = frappe.db.get_all(
             "Serial and Batch Entry",

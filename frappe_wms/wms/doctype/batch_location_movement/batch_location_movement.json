@@ -12,6 +12,7 @@
   "item_code",
   "item_name",
   "batch_no",
+  "customer",
   "warehouse",
   "section_locations",
   "from_location",
@@ -62,6 +63,15 @@
    "in_standard_filter": 1,
    "label": "Batch No",
    "options": "Batch",
+   "search_index": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "Customer",
    "search_index": 1
   },
   {

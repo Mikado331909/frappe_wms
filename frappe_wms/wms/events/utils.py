@@ -98,6 +98,36 @@ def get_picking_staging_location(warehouse, raise_if_missing=True):
 # ---------------------------------------------------------------------------
 
 
+def _get_customer_for_batch(batch_no):
+    """Resolve the customer linked to a batch."""
+    if not batch_no:
+        return None
+    return frappe.db.get_value("Batch", batch_no, "customer") or None
+
+
+def _validate_customer_on_location(storage_location, customer):
+    """
+    Block adding stock to a location that already holds a different customer's stock.
+    Zero-qty records are ignored so cleared locations can be reused.
+    """
+    if not customer:
+        return
+    existing_customers = frappe.db.get_all(
+        "Batch Location Stock",
+        filters={"storage_location": storage_location, "qty": [">", 0]},
+        fields=["customer"],
+        distinct=True,
+    )
+    for row in existing_customers:
+        if row.customer and row.customer != customer:
+            frappe.throw(
+                _(
+                    "Locatie {0} bevat al voorraad van klant {1}. "
+                    "Kies een andere locatie voor klant {2}."
+                ).format(storage_location, row.customer, customer)
+            )
+
+
 def add_location_qty(
     item_code, batch_no, warehouse, storage_location, qty, uom, ref_doctype, ref_name
 ):
@@ -105,6 +135,9 @@ def add_location_qty(
     qty = flt(qty)
     if qty <= 0:
         return
+
+    customer = _get_customer_for_batch(batch_no)
+    _validate_customer_on_location(storage_location, customer)
 
     existing = frappe.db.get_value(
         "Batch Location Stock",
@@ -133,6 +166,7 @@ def add_location_qty(
                 "storage_location": storage_location,
                 "qty": qty,
                 "uom": uom,
+                "customer": customer,
             }
         )
         # Skip cross-validate on first insert (ERPNext stock may not yet be posted)
@@ -148,6 +182,7 @@ def add_location_qty(
         qty=qty,
         ref_doctype=ref_doctype,
         ref_name=ref_name,
+        customer=customer,
     )
 
 
@@ -167,7 +202,7 @@ def deduct_location_qty(
             "warehouse": warehouse,
             "storage_location": storage_location,
         },
-        ["name", "qty"],
+        ["name", "qty", "customer"],
         as_dict=True,
     )
 
@@ -204,6 +239,7 @@ def deduct_location_qty(
         qty=qty,
         ref_doctype=ref_doctype,
         ref_name=ref_name,
+        customer=existing.customer,
     )
 
     final_qty = max(new_qty, 0.0)
@@ -224,6 +260,9 @@ def move_location_qty(
     qty = flt(qty)
     if qty <= 0:
         return
+
+    customer = _get_customer_for_batch(batch_no)
+    _validate_customer_on_location(to_location, customer)
 
     src = frappe.db.get_value(
         "Batch Location Stock",
@@ -281,6 +320,7 @@ def move_location_qty(
                 "storage_location": to_location,
                 "qty": qty,
                 "uom": uom,
+                "customer": customer,
             }
         )
         new_doc.flags.ignore_validate = True
@@ -296,6 +336,7 @@ def move_location_qty(
         qty=qty,
         ref_doctype=ref_doctype,
         ref_name=ref_name,
+        customer=customer,
     )
 
     frappe.db.set_value("Batch Location Stock", src.name, "qty", max(remaining, 0.0))
@@ -307,7 +348,8 @@ def move_location_qty(
 
 
 def _record_movement(
-    item_code, batch_no, warehouse, from_location, to_location, qty, ref_doctype, ref_name
+    item_code, batch_no, warehouse, from_location, to_location, qty, ref_doctype, ref_name,
+    customer=None,
 ):
     frappe.get_doc(
         {
@@ -322,5 +364,6 @@ def _record_movement(
             "qty": qty,
             "reference_doctype": ref_doctype,
             "reference_name": ref_name,
+            "customer": customer,
         }
     ).insert(ignore_permissions=True)

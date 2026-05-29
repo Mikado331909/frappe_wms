@@ -95,7 +95,7 @@ def force_delete_zero(name):
         frappe.throw(_("Cannot force-delete: record still has qty {0}.").format(
             frappe.utils.flt(doc.qty, 3)
         ))
-    frappe.delete_doc("Batch Location Stock", name, ignore_permissions=True, force=True)
+    frappe.db.delete("Batch Location Stock", {"name": name})
     return _("Record {0} deleted.").format(name)
 
 

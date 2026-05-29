@@ -1,4 +1,8 @@
 app_name = "frappe_wms"
+
+fixtures = [
+    {"doctype": "Workspace", "filters": [["name", "in", ["WMS"]]]},
+]
 app_title = "Frappe WMS"
 app_publisher = "Your Company"
 app_description = "Lightweight WMS location layer for ERPNext"

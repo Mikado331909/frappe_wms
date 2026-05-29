@@ -9,6 +9,7 @@
   "naming_series",
   "pick_list",
   "status",
+  "picking_strategy",
   "col_break_header",
   "picker",
   "posting_date",
@@ -43,6 +44,15 @@
    "options": "Draft\nOpen\nCompleted\nCancelled",
    "default": "Draft",
    "read_only": 0
+  },
+  {
+   "fieldname": "picking_strategy",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Picking Strategy",
+   "options": "Pick Sequence\nFEFO – First Expired, First Out\nFIFO – First In, First Out",
+   "default": "Pick Sequence",
+   "read_only": 1
   },
   {
    "fieldname": "col_break_header",

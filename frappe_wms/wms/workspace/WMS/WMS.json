@@ -4,7 +4,7 @@
  "doctype": "Workspace",
  "extends": null,
  "extends_another_page": 0,
- "for_user": null,
+ "for_user": "",
  "hide_custom": 0,
  "icon": "package",
  "is_hidden": 0,

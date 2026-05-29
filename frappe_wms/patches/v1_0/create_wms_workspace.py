@@ -42,6 +42,10 @@ def execute():
     _ensure_public_workspace()
     _add_to_custom_desktops()
     frappe.db.commit()
+    try:
+        frappe.clear_cache()
+    except Exception:
+        pass
 
 
 def _ensure_public_workspace():
@@ -50,6 +54,7 @@ def _ensure_public_workspace():
         frappe.db.set_value("Workspace", "WMS", {
             "public":    1,
             "is_hidden": 0,
+            "for_user":  "",
             "icon":      "package",
             "module":    "WMS",
             "label":     "WMS",
@@ -67,6 +72,7 @@ def _ensure_public_workspace():
         "icon":        "package",
         "public":      1,
         "is_hidden":   0,
+        "for_user":    "",
         "sequence_id": 99,
         "content":     _CONTENT,
         "shortcuts":   _SHORTCUTS,

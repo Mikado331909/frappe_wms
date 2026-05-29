@@ -194,12 +194,7 @@ def deduct_location_qty(
             )
         )
 
-    final_qty = max(new_qty, 0.0)
-    if final_qty <= 0.001:
-        frappe.delete_doc("Batch Location Stock", existing.name, ignore_permissions=True)
-    else:
-        frappe.db.set_value("Batch Location Stock", existing.name, "qty", final_qty)
-
+    # Record movement BEFORE deleting so the Dynamic Link validation passes
     _record_movement(
         item_code=item_code,
         batch_no=batch_no,
@@ -210,6 +205,12 @@ def deduct_location_qty(
         ref_doctype=ref_doctype,
         ref_name=ref_name,
     )
+
+    final_qty = max(new_qty, 0.0)
+    if final_qty <= 0.001:
+        frappe.delete_doc("Batch Location Stock", existing.name, ignore_permissions=True)
+    else:
+        frappe.db.set_value("Batch Location Stock", existing.name, "qty", final_qty)
 
 
 def move_location_qty(
@@ -258,10 +259,6 @@ def move_location_qty(
             )
         )
     remaining = flt(src.qty) - qty
-    if remaining <= 0.001:
-        frappe.delete_doc("Batch Location Stock", src.name, ignore_permissions=True)
-    else:
-        frappe.db.set_value("Batch Location Stock", src.name, "qty", remaining)
 
     dst = frappe.db.get_value(
         "Batch Location Stock",
@@ -292,6 +289,7 @@ def move_location_qty(
         new_doc.flags.ignore_validate = True
         new_doc.insert(ignore_permissions=True)
 
+    # Record movement BEFORE deleting source so Dynamic Link validation passes
     _record_movement(
         item_code=item_code,
         batch_no=batch_no,
@@ -302,6 +300,12 @@ def move_location_qty(
         ref_doctype=ref_doctype,
         ref_name=ref_name,
     )
+
+    # Now safe to delete source if empty
+    if remaining <= 0.001:
+        frappe.delete_doc("Batch Location Stock", src.name, ignore_permissions=True)
+    else:
+        frappe.db.set_value("Batch Location Stock", src.name, "qty", remaining)
 
 
 # ---------------------------------------------------------------------------

@@ -134,7 +134,7 @@ class LocationPick(Document):
                 from_location=staging_loc,
                 to_location=line.source_location,
                 qty=line.picked_qty,
-                ref_doctype="Location Pick Cancel",
+                ref_doctype="Location Pick",
                 ref_name=self.name,
             )
 

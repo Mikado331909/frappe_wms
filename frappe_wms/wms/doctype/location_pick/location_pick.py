@@ -255,11 +255,32 @@ def generate_location_pick(pick_list, picking_strategy=None):
             remaining -= pick_qty
 
     if not doc.items:
+        # Build diagnostic info to show in the error
+        diag = []
+        for pl_item in pl.locations:
+            batch_no = _get_pl_item_batch_no(pl_item)
+            bundle = getattr(pl_item, "serial_and_batch_bundle", None) or \
+                frappe.db.get_value("Pick List Item", pl_item.name, "serial_and_batch_bundle")
+            bls_count = frappe.db.count(
+                "Batch Location Stock",
+                {"item_code": pl_item.item_code, "batch_no": batch_no or "", "warehouse": pl_item.warehouse}
+            ) if batch_no else 0
+            bls_storage_count = frappe.db.sql("""
+                SELECT COUNT(*) FROM `tabBatch Location Stock` bls
+                INNER JOIN `tabStorage Location` sl ON sl.name = bls.storage_location
+                WHERE bls.item_code = %s AND bls.batch_no = %s
+                  AND bls.warehouse = %s AND sl.location_type = 'Storage'
+                  AND sl.is_active = 1 AND bls.qty > 0
+            """, (pl_item.item_code, batch_no or "", pl_item.warehouse))[0][0] if batch_no else 0
+            diag.append(
+                f"row{pl_item.idx}: item={pl_item.item_code} "
+                f"batch={batch_no!r} bundle={bundle!r} "
+                f"wh={pl_item.warehouse!r} "
+                f"bls_all={bls_count} bls_pickable={bls_storage_count}"
+            )
         frappe.throw(
-            _(
-                "No pickable location stock found for Pick List {0}. "
-                "Ensure batch items have Storage-type location stock."
-            ).format(pick_list)
+            "No pickable location stock found for Pick List {0}.<br><br>"
+            "Debug info:<br>{1}".format(pick_list, "<br>".join(diag))
         )
 
     doc.insert(ignore_permissions=True)

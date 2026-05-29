@@ -207,10 +207,7 @@ def deduct_location_qty(
     )
 
     final_qty = max(new_qty, 0.0)
-    if final_qty <= 0.001:
-        frappe.db.delete("Batch Location Stock", {"name": existing.name})
-    else:
-        frappe.db.set_value("Batch Location Stock", existing.name, "qty", final_qty)
+    frappe.db.set_value("Batch Location Stock", existing.name, "qty", final_qty)
 
 
 def move_location_qty(
@@ -301,11 +298,7 @@ def move_location_qty(
         ref_name=ref_name,
     )
 
-    # Now safe to delete source if empty
-    if remaining <= 0.001:
-        frappe.db.delete("Batch Location Stock", {"name": src.name})
-    else:
-        frappe.db.set_value("Batch Location Stock", src.name, "qty", remaining)
+    frappe.db.set_value("Batch Location Stock", src.name, "qty", max(remaining, 0.0))
 
 
 # ---------------------------------------------------------------------------

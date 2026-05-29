@@ -29,3 +29,7 @@ doctype_js = {
     "Pick List": "public/js/pick_list.js",
     "Batch Location Stock": "public/js/batch_location_stock.js",
 }
+
+doctype_list_js = {
+    "Batch Location Stock": "public/js/batch_location_stock_list.js",
+}

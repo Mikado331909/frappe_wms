@@ -1,0 +1,125 @@
+{
+ "content": "[{\"id\":\"wms_shortcuts\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Location Pick\",\"col\":3}},{\"id\":\"wms_shortcuts2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Batch Location Stock\",\"col\":3}},{\"id\":\"wms_shortcuts3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Storage Location\",\"col\":3}},{\"id\":\"wms_card1\",\"type\":\"card\",\"data\":{\"card_name\":\"Transactions\",\"col\":4}},{\"id\":\"wms_card2\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"wms_card3\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "Workspace",
+ "extends": null,
+ "extends_another_page": 0,
+ "for_user": null,
+ "hide_custom": 0,
+ "icon": "package",
+ "is_hidden": 0,
+ "label": "WMS",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Location Pick",
+   "link_count": 0,
+   "link_to": "Location Pick",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link",
+   "parent_label": "Transactions"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Batch Location Stock",
+   "link_count": 0,
+   "link_to": "Batch Location Stock",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link",
+   "parent_label": "Transactions"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Batch Location Movement",
+   "link_count": 0,
+   "link_to": "Batch Location Movement",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "parent_label": "Transactions"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Storage Location",
+   "link_count": 0,
+   "link_to": "Storage Location",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link",
+   "parent_label": "Setup"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "WMS Settings",
+   "link_count": 0,
+   "link_to": "WMS Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link",
+   "parent_label": "Setup"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Location Pick Lines",
+   "link_count": 0,
+   "link_to": "Location Pick Lines",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "parent_label": "Reports"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Location Stock Reconciliation",
+   "link_count": 0,
+   "link_to": "Location Stock Reconciliation",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link",
+   "parent_label": "Reports"
+  }
+ ],
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WMS",
+ "name": "WMS",
+ "owner": "Administrator",
+ "public": 1,
+ "roles": [],
+ "sequence_id": 99.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doctype": "Workspace Shortcut",
+   "format": "{} Open",
+   "label": "Location Pick",
+   "link_to": "Location Pick",
+   "stats_filter": "{\"status\": \"Open\"}",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doctype": "Workspace Shortcut",
+   "label": "Batch Location Stock",
+   "link_to": "Batch Location Stock",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Storage Location",
+   "link_to": "Storage Location",
+   "type": "DocType"
+  }
+ ],
+ "title": "WMS"
+}

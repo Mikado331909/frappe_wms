@@ -59,9 +59,32 @@ def reset_my_desktop():
     """, user, as_dict=True)
     results["all_user_defaults"] = all_dv
 
-    # 4. Check User document for desk_settings field
-    desk_settings = frappe.db.get_value("User", user, "desk_settings") or None
-    results["user_desk_settings"] = desk_settings[:200] if desk_settings else None
+    # 4. Check tabUser Settings (Frappe per-user per-page settings)
+    user_settings_rows = frappe.db.sql("""
+        SELECT `user`, `doctype`, SUBSTR(`data`, 1, 300) AS data_preview
+        FROM `__UserSettings`
+        WHERE `user` = %s
+        LIMIT 20
+    """, user, as_dict=True)
+    results["user_settings_rows"] = user_settings_rows
+
+    # 5. Check ALL DefaultValue keys for this user (no filter)
+    all_dv_full = frappe.db.sql("""
+        SELECT defkey, SUBSTR(defvalue, 1, 200) AS defvalue
+        FROM `tabDefaultValue`
+        WHERE parent = %s
+        LIMIT 50
+    """, user, as_dict=True)
+    results["all_user_defaults_full"] = all_dv_full
+
+    # 6. Check is_hidden on public workspaces directly
+    public_ws = frappe.db.sql("""
+        SELECT name, label, is_hidden, public, sequence_id
+        FROM `tabWorkspace`
+        WHERE public = 1 AND for_user IS NULL
+        ORDER BY sequence_id
+    """, as_dict=True)
+    results["public_workspaces"] = public_ws
 
     frappe.db.commit()
     results["message"] = "Done. Hard-refresh with Ctrl+Shift+R"

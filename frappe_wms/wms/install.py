@@ -77,14 +77,23 @@ def reset_my_desktop():
     """, user, as_dict=True)
     results["all_user_defaults_full"] = all_dv_full
 
-    # 6. Check is_hidden on public workspaces directly
-    public_ws = frappe.db.sql("""
-        SELECT name, label, is_hidden, public, sequence_id
+    # 6. Show ALL workspaces with their for_user value to understand the pattern
+    all_ws = frappe.db.sql("""
+        SELECT name, label, is_hidden, public, sequence_id,
+               COALESCE(for_user, '__NULL__') AS for_user_val
         FROM `tabWorkspace`
-        WHERE public = 1 AND for_user IS NULL
         ORDER BY sequence_id
+        LIMIT 30
     """, as_dict=True)
-    results["public_workspaces"] = public_ws
+    results["all_workspaces"] = all_ws
+
+    # 7. Fix: set for_user = '' on WMS (Frappe v16 uses '' not NULL for public ws)
+    fixed = frappe.db.sql("""
+        UPDATE `tabWorkspace`
+        SET for_user = ''
+        WHERE name = 'WMS' AND (for_user IS NULL OR for_user = '')
+    """)
+    results["wms_for_user_fixed"] = "Set for_user='' on WMS workspace"
 
     frappe.db.commit()
     results["message"] = "Done. Hard-refresh with Ctrl+Shift+R"

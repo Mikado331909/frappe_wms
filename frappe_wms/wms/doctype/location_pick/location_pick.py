@@ -205,8 +205,20 @@ def generate_location_pick(pick_list, picking_strategy=None):
         if not batch_no:
             continue
 
-        already_picked = frappe.utils.flt(pl_item.picked_qty)
-        required_qty = frappe.utils.flt(pl_item.qty) - already_picked
+        # In ERPNext v16, picked_qty is auto-set to qty on Pick List submit
+        # (as part of Serial and Batch Bundle creation), so we cannot use it
+        # to determine remaining WMS work.  Instead, subtract qty already
+        # committed by existing (non-cancelled) Location Pick documents.
+        wms_committed = frappe.utils.flt(
+            frappe.db.sql("""
+                SELECT COALESCE(SUM(lpl.required_qty), 0)
+                FROM `tabLocation Pick Line` lpl
+                INNER JOIN `tabLocation Pick` lp ON lp.name = lpl.parent
+                WHERE lpl.pick_list_item = %s
+                  AND lp.docstatus IN (0, 1)
+            """, pl_item.name)[0][0]
+        )
+        required_qty = frappe.utils.flt(pl_item.qty) - wms_committed
         if required_qty <= 0.001:
             continue
 

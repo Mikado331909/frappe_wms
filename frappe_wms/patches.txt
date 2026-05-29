@@ -1,2 +1,3 @@
 # add patch module paths here, one per line
 frappe_wms.patches.v1_0.create_wms_workspace
+frappe_wms.patches.v1_0.add_wms_to_custom_desktops

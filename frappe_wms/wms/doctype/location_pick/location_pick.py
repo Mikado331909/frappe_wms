@@ -20,13 +20,15 @@ class LocationPick(Document):
     def on_submit(self):
         self.status = "Completed"
         self._move_to_staging()
-        self._update_pick_list_picked_qty()
+        # picked_qty on the Pick List is checked client-side after submit.
+        # The user is asked via a dialog whether to overwrite it with WMS
+        # actuals (handled by public/js/location_pick.js + the whitelisted
+        # helpers get_pick_qty_discrepancies / apply_pick_qty_update below).
         self.db_set("status", "Completed")
 
     def on_cancel(self):
         self.status = "Cancelled"
         self._reverse_staging()
-        self._reverse_pick_list_picked_qty()
         self.db_set("status", "Cancelled")
 
     # ------------------------------------------------------------------
@@ -111,25 +113,8 @@ class LocationPick(Document):
                 ref_name=self.name,
             )
 
-    def _update_pick_list_picked_qty(self):
-        for line in self.items:
-            if not line.pick_list_item or not line.picked_qty:
-                continue
-            current = (
-                frappe.db.get_value(
-                    "Pick List Item", line.pick_list_item, "picked_qty"
-                )
-                or 0.0
-            )
-            frappe.db.set_value(
-                "Pick List Item",
-                line.pick_list_item,
-                "picked_qty",
-                frappe.utils.flt(current) + line.picked_qty,
-            )
-
     # ------------------------------------------------------------------
-    # Cancel: reverse staging and pick list
+    # Cancel: reverse staging
     # ------------------------------------------------------------------
 
     def _reverse_staging(self):
@@ -151,23 +136,6 @@ class LocationPick(Document):
                 qty=line.picked_qty,
                 ref_doctype="Location Pick Cancel",
                 ref_name=self.name,
-            )
-
-    def _reverse_pick_list_picked_qty(self):
-        for line in self.items:
-            if not line.pick_list_item or not line.picked_qty:
-                continue
-            current = (
-                frappe.db.get_value(
-                    "Pick List Item", line.pick_list_item, "picked_qty"
-                )
-                or 0.0
-            )
-            frappe.db.set_value(
-                "Pick List Item",
-                line.pick_list_item,
-                "picked_qty",
-                max(0.0, frappe.utils.flt(current) - line.picked_qty),
             )
 
 
@@ -297,6 +265,86 @@ def generate_location_pick(pick_list, picking_strategy=None):
 
     doc.insert(ignore_permissions=True)
     return doc.name
+
+
+# ----------------------------------------------------------------------
+# Whitelisted API — called from location_pick.js after submit
+# ----------------------------------------------------------------------
+
+
+@frappe.whitelist()
+def get_pick_qty_discrepancies(location_pick):
+    """
+    Compare WMS actual picked qty vs ERPNext Pick List picked_qty per line.
+    Returns a list of dicts for lines that differ.
+    Called client-side after Location Pick submit to decide whether to sync.
+    """
+    doc = frappe.get_doc("Location Pick", location_pick)
+    discrepancies = []
+
+    seen_pl_items = set()
+    for line in doc.items:
+        if not line.pick_list_item or line.pick_list_item in seen_pl_items:
+            continue
+        seen_pl_items.add(line.pick_list_item)
+
+        # Total WMS picked for this Pick List Item across all submitted Location Picks
+        wms_qty = frappe.utils.flt(
+            frappe.db.sql("""
+                SELECT COALESCE(SUM(lpl.picked_qty), 0)
+                FROM `tabLocation Pick Line` lpl
+                INNER JOIN `tabLocation Pick` lp ON lp.name = lpl.parent
+                WHERE lpl.pick_list_item = %s AND lp.docstatus = 1
+            """, line.pick_list_item)[0][0]
+        )
+
+        erpnext_qty = frappe.utils.flt(
+            frappe.db.get_value("Pick List Item", line.pick_list_item, "picked_qty") or 0
+        )
+        pl_qty = frappe.utils.flt(
+            frappe.db.get_value("Pick List Item", line.pick_list_item, "qty") or 0
+        )
+
+        if abs(wms_qty - erpnext_qty) > 0.001:
+            discrepancies.append({
+                "item_code": line.item_code,
+                "pick_list_item": line.pick_list_item,
+                "wms_qty": wms_qty,
+                "erpnext_qty": erpnext_qty,
+                "pl_qty": pl_qty,
+            })
+
+    return discrepancies
+
+
+@frappe.whitelist()
+def apply_pick_qty_update(location_pick):
+    """
+    Overwrite Pick List Item.picked_qty with WMS actuals.
+    Called when the user clicks 'Yes' in the discrepancy dialog.
+    """
+    doc = frappe.get_doc("Location Pick", location_pick)
+
+    seen_pl_items = set()
+    for line in doc.items:
+        if not line.pick_list_item or line.pick_list_item in seen_pl_items:
+            continue
+        seen_pl_items.add(line.pick_list_item)
+
+        wms_qty = frappe.utils.flt(
+            frappe.db.sql("""
+                SELECT COALESCE(SUM(lpl.picked_qty), 0)
+                FROM `tabLocation Pick Line` lpl
+                INNER JOIN `tabLocation Pick` lp ON lp.name = lpl.parent
+                WHERE lpl.pick_list_item = %s AND lp.docstatus = 1
+            """, line.pick_list_item)[0][0]
+        )
+
+        frappe.db.set_value(
+            "Pick List Item", line.pick_list_item, "picked_qty", wms_qty
+        )
+
+    frappe.db.commit()
 
 
 def _get_pl_item_batch_no(pl_item):

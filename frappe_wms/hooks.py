@@ -32,6 +32,7 @@ doc_events = {
 doctype_js = {
     "Pick List": "public/js/pick_list.js",
     "Batch Location Stock": "public/js/batch_location_stock.js",
+    "Location Pick": "public/js/location_pick.js",
 }
 
 doctype_list_js = {

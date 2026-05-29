@@ -84,6 +84,22 @@ class BatchLocationStock(Document):
 
 
 @frappe.whitelist()
+def force_delete_zero(name):
+    """
+    Force-delete a Batch Location Stock record that has reached zero qty.
+    Uses force=True to bypass Frappe's link-checker (the linked Batch Location
+    Movement rows are intentional audit history, not a reason to keep the record).
+    """
+    doc = frappe.get_doc("Batch Location Stock", name)
+    if frappe.utils.flt(doc.qty) > 0.001:
+        frappe.throw(_("Cannot force-delete: record still has qty {0}.").format(
+            frappe.utils.flt(doc.qty, 3)
+        ))
+    frappe.delete_doc("Batch Location Stock", name, ignore_permissions=True, force=True)
+    return _("Record {0} deleted.").format(name)
+
+
+@frappe.whitelist()
 def move_stock(source_name, to_location, qty):
     """
     Move qty from one Batch Location Stock record to another location.

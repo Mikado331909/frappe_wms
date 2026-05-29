@@ -194,9 +194,11 @@ def deduct_location_qty(
             )
         )
 
-    frappe.db.set_value(
-        "Batch Location Stock", existing.name, "qty", max(new_qty, 0.0)
-    )
+    final_qty = max(new_qty, 0.0)
+    if final_qty <= 0.001:
+        frappe.delete_doc("Batch Location Stock", existing.name, ignore_permissions=True)
+    else:
+        frappe.db.set_value("Batch Location Stock", existing.name, "qty", final_qty)
 
     _record_movement(
         item_code=item_code,
@@ -255,7 +257,11 @@ def move_location_qty(
                 batch_no,
             )
         )
-    frappe.db.set_value("Batch Location Stock", src.name, "qty", flt(src.qty) - qty)
+    remaining = flt(src.qty) - qty
+    if remaining <= 0.001:
+        frappe.delete_doc("Batch Location Stock", src.name, ignore_permissions=True)
+    else:
+        frappe.db.set_value("Batch Location Stock", src.name, "qty", remaining)
 
     dst = frappe.db.get_value(
         "Batch Location Stock",

@@ -107,24 +107,35 @@ def _get_customer_for_batch(batch_no):
 
 def _validate_customer_on_location(storage_location, customer):
     """
-    Block adding stock to a location that already holds a different customer's stock.
-    Zero-qty records are ignored so cleared locations can be reused.
+    Blokkeer toevoegen aan een locatie die al voorraad van een andere eigenaar heeft.
+    Regels:
+      - klant X + klant Y        → geblokkeerd
+      - klant X + eigen voorraad → geblokkeerd
+      - eigen voorraad + klant X → geblokkeerd
+      - klant X + klant X        → toegestaan
+      - eigen voorraad + eigen   → toegestaan
+    Zero-qty records worden genegeerd zodat lege locaties hergebruikt kunnen worden.
     """
-    if not customer:
-        return
-    existing_customers = frappe.db.get_all(
+    existing_rows = frappe.db.get_all(
         "Batch Location Stock",
         filters={"storage_location": storage_location, "qty": [">", 0]},
         fields=["customer"],
         distinct=True,
     )
-    for row in existing_customers:
-        if row.customer and row.customer != customer:
+    if not existing_rows:
+        return
+    for row in existing_rows:
+        existing_customer = row.customer or None
+        if existing_customer != customer:
             frappe.throw(
                 _(
-                    "Locatie {0} bevat al voorraad van klant {1}. "
-                    "Kies een andere locatie voor klant {2}."
-                ).format(storage_location, row.customer, customer)
+                    "Locatie {0} bevat al voorraad van {1}. "
+                    "Kies een andere locatie voor {2}."
+                ).format(
+                    storage_location,
+                    existing_customer or "eigen voorraad",
+                    customer or "eigen voorraad",
+                )
             )
 
 

@@ -1,0 +1,13 @@
+[
+ {
+  "doctype": "Custom Field",
+  "dt": "Purchase Receipt Item",
+  "fieldname": "wms_customer",
+  "fieldtype": "Link",
+  "options": "Customer",
+  "label": "Customer (WMS)",
+  "insert_after": "item_name",
+  "in_list_view": 0,
+  "description": "Klant voor wie deze regel wordt ontvangen. Wordt overgenomen op de WMS locatievoorraad."
+ }
+]

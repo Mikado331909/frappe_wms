@@ -2,6 +2,7 @@ app_name = "frappe_wms"
 
 fixtures = [
     {"doctype": "Workspace", "filters": [["name", "in", ["WMS"]]]},
+    {"doctype": "Custom Field", "filters": [["dt", "=", "Purchase Receipt Item"], ["fieldname", "=", "wms_customer"]]},
 ]
 app_title = "Frappe WMS"
 app_publisher = "Your Company"

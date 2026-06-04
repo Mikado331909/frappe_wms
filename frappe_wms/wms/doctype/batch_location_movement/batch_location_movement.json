@@ -12,6 +12,7 @@
   "item_code",
   "item_name",
   "batch_no",
+  "movement_type",
   "customer",
   "warehouse",
   "section_locations",
@@ -64,6 +65,13 @@
    "label": "Batch No",
    "options": "Batch",
    "search_index": 1
+  },
+  {
+   "fieldname": "movement_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Movement Type",
+   "options": "\nInbound\nPutaway\nPick\nCross-dock\nQC Release\nProduction\nProduction Return\nCycle Count\nManual"
   },
   {
    "fieldname": "customer",

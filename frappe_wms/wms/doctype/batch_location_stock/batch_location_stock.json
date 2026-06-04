@@ -11,6 +11,7 @@
   "batch_no",
   "customer",
   "warehouse",
+  "zone",
   "storage_location",
   "qty",
   "uom",
@@ -53,6 +54,16 @@
    "options": "Customer",
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "zone",
+   "fieldtype": "Link",
+   "fetch_from": "storage_location.zone",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Zone",
+   "options": "WMS Zone",
+   "read_only": 1
   },
   {
    "fieldname": "warehouse",

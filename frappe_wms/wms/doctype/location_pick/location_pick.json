@@ -7,7 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "naming_series",
-  "pick_list",
+  "pick_lists",
   "status",
   "picking_strategy",
   "col_break_header",
@@ -15,7 +15,8 @@
   "posting_date",
   "posting_time",
   "section_items",
-  "items"
+  "items",
+  "pick_list"
  ],
  "fields": [
   {
@@ -27,13 +28,18 @@
    "set_only_once": 1
   },
   {
+   "fieldname": "pick_lists",
+   "fieldtype": "Table",
+   "label": "Pick Lists",
+   "options": "Location Pick Source",
+   "reqd": 1
+  },
+  {
    "fieldname": "pick_list",
    "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Pick List",
-   "options": "Pick List",
-   "reqd": 1
+   "hidden": 1,
+   "label": "Pick List (legacy)",
+   "options": "Pick List"
   },
   {
    "fieldname": "status",
@@ -132,5 +138,5 @@
  "sort_order": "DESC",
  "states": [],
  "track_changes": 1,
- "title_field": "pick_list"
+ "title_field": "naming_series"
 }

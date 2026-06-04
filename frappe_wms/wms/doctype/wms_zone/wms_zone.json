@@ -1,76 +1,61 @@
 {
  "actions": [],
- "autoname": "field:location_code",
+ "autoname": "field:zone_code",
  "creation": "2024-01-01 00:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "location_code",
-  "location_name",
+  "zone_code",
+  "zone_name",
   "warehouse",
-  "zone",
-  "location_type",
-  "pick_sequence",
-  "max_qty",
+  "zone_type",
+  "dedicated_customer",
   "is_active"
  ],
  "fields": [
   {
-   "fieldname": "location_code",
+   "fieldname": "zone_code",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Location Code",
+   "label": "Zone Code",
    "reqd": 1,
    "unique": 1
   },
   {
-   "fieldname": "location_name",
+   "fieldname": "zone_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Location Name",
+   "label": "Zone Name",
    "reqd": 1
   },
   {
    "fieldname": "warehouse",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Warehouse",
    "options": "Warehouse",
    "reqd": 1,
    "search_index": 1
   },
   {
-   "fieldname": "zone",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Zone",
-   "options": "WMS Zone",
-   "search_index": 1
-  },
-  {
-   "fieldname": "location_type",
+   "fieldname": "zone_type",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Location Type",
-   "options": "Storage\nReceiving\nPicking Staging\nActive Storage\nQC Hold\nProduction Staging\nOutbound Staging\nCross-dock Staging\nInspection\nQuarantine",
+   "label": "Zone Type",
+   "options": "Receiving\nActive Storage\nQC Hold\nProduction Staging\nOutbound Staging\nCross-dock Staging\nInspection\nQuarantine",
    "reqd": 1
   },
   {
-   "fieldname": "pick_sequence",
-   "fieldtype": "Int",
+   "fieldname": "dedicated_customer",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Pick Sequence",
-   "default": "100"
-  },
-  {
-   "fieldname": "max_qty",
-   "fieldtype": "Float",
-   "label": "Max Qty",
-   "default": "0",
-   "description": "Maximale hoeveelheid voor deze locatie. 0 = geen limiet."
+   "in_standard_filter": 1,
+   "label": "Dedicated Customer",
+   "options": "Customer",
+   "description": "Als ingevuld, is deze zone exclusief voor deze klant. Alle opslaglocaties in deze zone erven deze klantbeperking."
   },
   {
    "fieldname": "is_active",
@@ -83,7 +68,7 @@
  "modified": "2024-01-01 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "WMS",
- "name": "Storage Location",
+ "name": "WMS Zone",
  "owner": "Administrator",
  "permissions": [
   {
@@ -111,7 +96,7 @@
    "write": 0
   }
  ],
- "sort_field": "pick_sequence",
+ "sort_field": "zone_code",
  "sort_order": "ASC",
  "states": [],
  "track_changes": 1

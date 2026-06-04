@@ -84,6 +84,111 @@ class BatchLocationStock(Document):
 
 
 @frappe.whitelist()
+def check_location_compatibility(to_location, batch_no, qty):
+    """
+    Controleer of verplaatsen naar een locatie toegestaan is en geef eventuele
+    waarschuwingen terug zodat de frontend een Ja/Nee dialoog kan tonen.
+
+    Geeft een dict terug:
+      status: "ok" | "warning" | "soft_warning" | "blocked"
+      type:   "different_customer" | "existing_stock" | "capacity" | null
+      message: str
+      existing_items: list  (alleen bij status "warning")
+      capacity_warning: str | null
+    """
+    qty = frappe.utils.flt(qty)
+
+    # Klant van deze batch
+    customer = frappe.db.get_value("Batch", batch_no, "customer") or None
+
+    # Locatiegegevens
+    loc = frappe.db.get_value(
+        "Storage Location", to_location, ["max_qty", "warehouse"], as_dict=True
+    )
+    if not loc:
+        return {"status": "blocked", "message": _("Locatie {0} niet gevonden.").format(to_location)}
+
+    # Bestaande voorraad op deze locatie
+    existing_stock = frappe.db.get_all(
+        "Batch Location Stock",
+        filters={"storage_location": to_location, "qty": [">", 0]},
+        fields=["item_code", "batch_no", "qty", "customer", "uom"],
+    )
+
+    # Klant-mismatch check
+    for row in existing_stock:
+        existing_customer = row.customer or None
+        if existing_customer != customer:
+            return {
+                "status": "blocked",
+                "type": "different_customer",
+                "message": _(
+                    "Locatie {0} bevat al voorraad van {1}. "
+                    "Kies een andere locatie voor {2}."
+                ).format(
+                    to_location,
+                    ("klant " + existing_customer) if existing_customer else "eigen voorraad",
+                    ("klant " + customer) if customer else "eigen voorraad",
+                ),
+            }
+
+    # Er is bestaande voorraad van dezelfde klant — toon overzicht voor Ja/Nee dialoog
+    if existing_stock:
+        # Groepeer per item_code
+        item_summary = {}
+        for row in existing_stock:
+            key = row.item_code
+            if key not in item_summary:
+                item_summary[key] = {
+                    "item_code": key,
+                    "item_name": frappe.db.get_value("Item", key, "item_name") or key,
+                    "qty": 0,
+                    "uom": row.uom or "",
+                }
+            item_summary[key]["qty"] = frappe.utils.flt(item_summary[key]["qty"]) + frappe.utils.flt(row.qty)
+
+        # Capaciteitscheck
+        capacity_warning = None
+        if frappe.utils.flt(loc.max_qty) > 0:
+            current_total = sum(frappe.utils.flt(r.qty) for r in existing_stock)
+            new_total = current_total + qty
+            if new_total > frappe.utils.flt(loc.max_qty):
+                capacity_warning = _(
+                    "Locatie {0} heeft een capaciteit van {1}. "
+                    "Na plaatsing staat er {2} ({3}%)."
+                ).format(
+                    to_location,
+                    frappe.utils.flt(loc.max_qty, 3),
+                    frappe.utils.flt(new_total, 3),
+                    round(new_total / frappe.utils.flt(loc.max_qty) * 100),
+                )
+
+        return {
+            "status": "warning",
+            "type": "existing_stock",
+            "message": _("Op locatie {0} ligt voor {1} al:").format(
+                to_location,
+                ("klant " + customer) if customer else "eigen voorraad",
+            ),
+            "existing_items": list(item_summary.values()),
+            "capacity_warning": capacity_warning,
+        }
+
+    # Geen bestaande voorraad — alleen capaciteitscheck
+    if frappe.utils.flt(loc.max_qty) > 0 and qty > frappe.utils.flt(loc.max_qty):
+        return {
+            "status": "soft_warning",
+            "type": "capacity",
+            "message": _(
+                "Locatie {0} heeft een capaciteit van {1}. "
+                "De hoeveelheid ({2}) overschrijdt de capaciteit. Toch doorgaan?"
+            ).format(to_location, frappe.utils.flt(loc.max_qty, 3), frappe.utils.flt(qty, 3)),
+        }
+
+    return {"status": "ok", "message": ""}
+
+
+@frappe.whitelist()
 def move_stock(source_name, to_location, qty):
     """
     Move qty from one Batch Location Stock record to another location.

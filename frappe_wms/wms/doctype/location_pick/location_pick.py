@@ -1,3 +1,4 @@
+import json
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -13,6 +14,7 @@ class LocationPick(Document):
 
     def validate(self):
         self._validate_picked_qty()
+        self._validate_no_duplicate_pick_lists()
 
     def before_submit(self):
         self._check_available_qty()
@@ -20,10 +22,6 @@ class LocationPick(Document):
     def on_submit(self):
         self.status = "Completed"
         self._move_to_staging()
-        # picked_qty on the Pick List is checked client-side after submit.
-        # The user is asked via a dialog whether to overwrite it with WMS
-        # actuals (handled by public/js/location_pick.js + the whitelisted
-        # helpers get_pick_qty_discrepancies / apply_pick_qty_update below).
         self.db_set("status", "Completed")
 
     def on_cancel(self):
@@ -35,19 +33,28 @@ class LocationPick(Document):
     # Validation helpers
     # ------------------------------------------------------------------
 
+    def _validate_no_duplicate_pick_lists(self):
+        seen = set()
+        for row in self.get("pick_lists", []):
+            if row.pick_list in seen:
+                frappe.throw(
+                    _("Pick List {0} is meer dan één keer toegevoegd.").format(row.pick_list)
+                )
+            seen.add(row.pick_list)
+
     def _validate_picked_qty(self):
         for line in self.items:
             if not line.picked_qty:
                 continue
             if line.picked_qty < 0:
                 frappe.throw(
-                    _("Row {0}: Picked Qty cannot be negative.").format(line.idx)
+                    _("Rij {0}: Gepickte hoeveelheid mag niet negatief zijn.").format(line.idx)
                 )
             if line.picked_qty > line.required_qty + 0.001:
                 frappe.throw(
                     _(
-                        "Row {0}: Picked Qty {1} exceeds Required Qty {2} "
-                        "for Item {3}."
+                        "Rij {0}: Gepickte hoeveelheid {1} overschrijdt "
+                        "vereiste hoeveelheid {2} voor item {3}."
                     ).format(
                         line.idx,
                         frappe.utils.flt(line.picked_qty, 3),
@@ -76,8 +83,8 @@ class LocationPick(Document):
             if frappe.utils.flt(available) < line.picked_qty - 0.001:
                 frappe.throw(
                     _(
-                        "Row {0}: Insufficient qty in {1}. "
-                        "Available: {2}, Picked: {3} for Item {4} Batch {5}."
+                        "Rij {0}: Onvoldoende voorraad op {1}. "
+                        "Beschikbaar: {2}, Gepickt: {3} voor item {4} batch {5}."
                     ).format(
                         line.idx,
                         line.source_location,
@@ -97,7 +104,6 @@ class LocationPick(Document):
             get_picking_staging_location,
             move_location_qty,
         )
-
         for line in self.items:
             if not line.picked_qty:
                 continue
@@ -114,7 +120,7 @@ class LocationPick(Document):
             )
 
     # ------------------------------------------------------------------
-    # Cancel: reverse staging
+    # Cancel: reverse staging back to source locations
     # ------------------------------------------------------------------
 
     def _reverse_staging(self):
@@ -122,7 +128,6 @@ class LocationPick(Document):
             get_picking_staging_location,
             move_location_qty,
         )
-
         for line in self.items:
             if not line.picked_qty:
                 continue
@@ -145,125 +150,152 @@ class LocationPick(Document):
 
 
 @frappe.whitelist()
-def generate_location_pick(pick_list, picking_strategy=None):
-    """
-    Generate a Location Pick from an ERPNext Pick List.
+def get_open_location_picks():
+    """Geef lijst van open (niet-ingediende) Location Pick documenten."""
+    return frappe.get_all(
+        "Location Pick",
+        filters={"docstatus": 0},
+        fields=["name", "posting_date"],
+        order_by="posting_date desc",
+        limit=20,
+    )
 
-    picking_strategy options:
-      - 'Pick Sequence'               : sort by storage location pick_sequence (default)
-      - 'FEFO – First Expired, First Out' : oldest expiry date first
-      - 'FIFO – First In, First Out'  : oldest batch creation date first
+
+@frappe.whitelist()
+def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None):
     """
+    Genereer of verleng een Location Pick vanuit één of meerdere ERPNext Pick Lists.
+
+    pick_lists:       JSON-lijst van Pick List namen, of een enkele naam als string
+    picking_strategy: 'Pick Sequence' / 'FEFO ...' / 'FIFO ...'
+    location_pick:    als opgegeven, voeg regels toe aan deze bestaande Location Pick
+    """
+    # Normaliseer naar een Python lijst
+    if isinstance(pick_lists, str):
+        try:
+            pick_lists = json.loads(pick_lists)
+        except (json.JSONDecodeError, ValueError):
+            pick_lists = [pick_lists]
+
     if not picking_strategy:
         picking_strategy = "Pick Sequence"
 
     order_by = _order_by_for_strategy(picking_strategy)
 
-    pl = frappe.get_doc("Pick List", pick_list)
+    # Bestaande Location Pick ophalen of nieuwe aanmaken
+    if location_pick:
+        doc = frappe.get_doc("Location Pick", location_pick)
+        if doc.docstatus != 0:
+            frappe.throw(
+                _("Location Pick {0} is al ingediend en kan niet meer worden gewijzigd.").format(
+                    location_pick
+                )
+            )
+    else:
+        doc = frappe.new_doc("Location Pick")
+        doc.picking_strategy = picking_strategy
+        doc.posting_date = today()
+        doc.status = "Open"
 
-    doc = frappe.new_doc("Location Pick")
-    doc.pick_list = pick_list
-    doc.picking_strategy = picking_strategy
-    doc.posting_date = today()
-    doc.status = "Open"
+    # Pick Lists die al aan dit document gekoppeld zijn
+    existing_pick_lists = {row.pick_list for row in doc.get("pick_lists", [])}
+    new_lines_added = 0
 
-    for pl_item in pl.locations:
-        # Resolve batch_no: direct field (v15) or Serial and Batch Bundle (v16)
-        batch_no = _get_pl_item_batch_no(pl_item)
-        if not batch_no:
+    for pl_name in pick_lists:
+        if pl_name in existing_pick_lists:
+            frappe.msgprint(
+                _("Pick List {0} is al toegevoegd aan deze Location Pick.").format(pl_name)
+            )
             continue
 
-        # In ERPNext v16, picked_qty is auto-set to qty on Pick List submit
-        # (as part of Serial and Batch Bundle creation), so we cannot use it
-        # to determine remaining WMS work.  Instead, subtract qty already
-        # committed by existing (non-cancelled) Location Pick documents.
-        wms_committed = frappe.utils.flt(
-            frappe.db.sql("""
-                SELECT COALESCE(SUM(lpl.required_qty), 0)
-                FROM `tabLocation Pick Line` lpl
-                INNER JOIN `tabLocation Pick` lp ON lp.name = lpl.parent
-                WHERE lpl.pick_list_item = %s
-                  AND lp.docstatus IN (0, 1)
-            """, pl_item.name)[0][0]
-        )
-        required_qty = frappe.utils.flt(pl_item.qty) - wms_committed
-        if required_qty <= 0.001:
-            continue
+        pl = frappe.get_doc("Pick List", pl_name)
+        doc.append("pick_lists", {"pick_list": pl_name})
 
-        available_rows = frappe.db.sql(
-            f"""
-            SELECT bls.name, bls.qty, bls.storage_location,
-                   sl.pick_sequence,
-                   b.expiry_date, b.creation AS batch_creation
-            FROM `tabBatch Location Stock` bls
-            INNER JOIN `tabStorage Location` sl ON sl.name = bls.storage_location
-            LEFT  JOIN `tabBatch`            b  ON b.name  = bls.batch_no
-            WHERE bls.item_code = %(item_code)s
-              AND bls.batch_no   = %(batch_no)s
-              AND bls.warehouse  = %(warehouse)s
-              AND sl.location_type = 'Storage'
-              AND sl.is_active = 1
-              AND bls.qty > 0
-            ORDER BY {order_by}
-            """,
-            {
-                "item_code": pl_item.item_code,
-                "batch_no": batch_no,
-                "warehouse": pl_item.warehouse,
-            },
-            as_dict=True,
-        )
+        for pl_item in pl.locations:
+            batch_no = _get_pl_item_batch_no(pl_item)
+            if not batch_no:
+                continue
 
-        remaining = required_qty
-        for avail in available_rows:
-            if remaining <= 0.001:
-                break
-            pick_qty = min(frappe.utils.flt(avail.qty), remaining)
-            doc.append(
-                "items",
+            # Hoeveel is al ingepland door andere (niet-geannuleerde) Location Picks?
+            wms_committed = frappe.utils.flt(
+                frappe.db.sql("""
+                    SELECT COALESCE(SUM(lpl.required_qty), 0)
+                    FROM `tabLocation Pick Line` lpl
+                    INNER JOIN `tabLocation Pick` lp ON lp.name = lpl.parent
+                    WHERE lpl.pick_list_item = %s
+                      AND lp.docstatus IN (0, 1)
+                """, pl_item.name)[0][0]
+            )
+            required_qty = frappe.utils.flt(pl_item.qty) - wms_committed
+            if required_qty <= 0.001:
+                continue
+
+            # Beschikbare Storage locaties voor dit item/batch/warehouse
+            # Ondersteunt zowel oud ('Storage') als nieuw ('Active Storage') locatietype
+            available_rows = frappe.db.sql(
+                f"""
+                SELECT bls.name, bls.qty, bls.storage_location,
+                       sl.pick_sequence,
+                       b.expiry_date, b.creation AS batch_creation
+                FROM `tabBatch Location Stock` bls
+                INNER JOIN `tabStorage Location` sl ON sl.name = bls.storage_location
+                LEFT  JOIN `tabBatch`            b  ON b.name  = bls.batch_no
+                WHERE bls.item_code = %(item_code)s
+                  AND bls.batch_no   = %(batch_no)s
+                  AND bls.warehouse  = %(warehouse)s
+                  AND sl.location_type IN ('Storage', 'Active Storage')
+                  AND sl.is_active = 1
+                  AND bls.qty > 0
+                ORDER BY {order_by}
+                """,
                 {
                     "item_code": pl_item.item_code,
                     "batch_no": batch_no,
                     "warehouse": pl_item.warehouse,
-                    "source_location": avail.storage_location,
-                    "required_qty": pick_qty,
-                    "picked_qty": 0.0,
-                    "uom": pl_item.uom,
-                    "pick_list_item": pl_item.name,
                 },
+                as_dict=True,
             )
-            remaining -= pick_qty
 
-    if not doc.items:
-        # Build diagnostic info to show in the error
-        diag = []
-        for pl_item in pl.locations:
-            batch_no = _get_pl_item_batch_no(pl_item)
-            bundle = getattr(pl_item, "serial_and_batch_bundle", None) or \
-                frappe.db.get_value("Pick List Item", pl_item.name, "serial_and_batch_bundle")
-            bls_count = frappe.db.count(
-                "Batch Location Stock",
-                {"item_code": pl_item.item_code, "batch_no": batch_no or "", "warehouse": pl_item.warehouse}
-            ) if batch_no else 0
-            bls_storage_count = frappe.db.sql("""
-                SELECT COUNT(*) FROM `tabBatch Location Stock` bls
-                INNER JOIN `tabStorage Location` sl ON sl.name = bls.storage_location
-                WHERE bls.item_code = %s AND bls.batch_no = %s
-                  AND bls.warehouse = %s AND sl.location_type = 'Storage'
-                  AND sl.is_active = 1 AND bls.qty > 0
-            """, (pl_item.item_code, batch_no or "", pl_item.warehouse))[0][0] if batch_no else 0
-            diag.append(
-                f"row{pl_item.idx}: item={pl_item.item_code} "
-                f"batch={batch_no!r} bundle={bundle!r} "
-                f"wh={pl_item.warehouse!r} "
-                f"bls_all={bls_count} bls_pickable={bls_storage_count}"
-            )
+            remaining = required_qty
+            for avail in available_rows:
+                if remaining <= 0.001:
+                    break
+                pick_qty = min(frappe.utils.flt(avail.qty), remaining)
+                doc.append(
+                    "items",
+                    {
+                        "item_code": pl_item.item_code,
+                        "batch_no": batch_no,
+                        "warehouse": pl_item.warehouse,
+                        "source_location": avail.storage_location,
+                        "required_qty": pick_qty,
+                        "picked_qty": 0.0,
+                        "uom": pl_item.uom,
+                        "pick_list_item": pl_item.name,
+                        "pick_list": pl_name,
+                    },
+                )
+                new_lines_added += 1
+                remaining -= pick_qty
+
+    if not doc.items and not location_pick:
         frappe.throw(
-            "No pickable location stock found for Pick List {0}.<br><br>"
-            "Debug info:<br>{1}".format(pick_list, "<br>".join(diag))
+            _("Geen pickbare locatievoorraad gevonden voor de opgegeven Pick Lists.")
         )
 
-    doc.insert(ignore_permissions=True)
+    if new_lines_added == 0 and location_pick:
+        frappe.throw(
+            _(
+                "Geen nieuwe regels toegevoegd — alle items zijn al ingepland "
+                "of er is geen voorraad op opslaglocaties."
+            )
+        )
+
+    if location_pick:
+        doc.save(ignore_permissions=True)
+    else:
+        doc.insert(ignore_permissions=True)
+
     return doc.name
 
 
@@ -274,11 +306,7 @@ def generate_location_pick(pick_list, picking_strategy=None):
 
 @frappe.whitelist()
 def get_pick_qty_discrepancies(location_pick):
-    """
-    Compare WMS actual picked qty vs ERPNext Pick List picked_qty per line.
-    Returns a list of dicts for lines that differ.
-    Called client-side after Location Pick submit to decide whether to sync.
-    """
+    """Vergelijk WMS gepickte hoeveelheid met ERPNext Pick List picked_qty per regel."""
     doc = frappe.get_doc("Location Pick", location_pick)
     discrepancies = []
 
@@ -288,7 +316,6 @@ def get_pick_qty_discrepancies(location_pick):
             continue
         seen_pl_items.add(line.pick_list_item)
 
-        # Total WMS picked for this Pick List Item across all submitted Location Picks
         wms_qty = frappe.utils.flt(
             frappe.db.sql("""
                 SELECT COALESCE(SUM(lpl.picked_qty), 0)
@@ -297,7 +324,6 @@ def get_pick_qty_discrepancies(location_pick):
                 WHERE lpl.pick_list_item = %s AND lp.docstatus = 1
             """, line.pick_list_item)[0][0]
         )
-
         erpnext_qty = frappe.utils.flt(
             frappe.db.get_value("Pick List Item", line.pick_list_item, "picked_qty") or 0
         )
@@ -308,6 +334,7 @@ def get_pick_qty_discrepancies(location_pick):
         if abs(wms_qty - erpnext_qty) > 0.001:
             discrepancies.append({
                 "item_code": line.item_code,
+                "pick_list": line.pick_list,
                 "pick_list_item": line.pick_list_item,
                 "wms_qty": wms_qty,
                 "erpnext_qty": erpnext_qty,
@@ -319,10 +346,7 @@ def get_pick_qty_discrepancies(location_pick):
 
 @frappe.whitelist()
 def apply_pick_qty_update(location_pick):
-    """
-    Overwrite Pick List Item.picked_qty with WMS actuals.
-    Called when the user clicks 'Yes' in the discrepancy dialog.
-    """
+    """Overschrijf Pick List Item.picked_qty met de WMS werkelijke hoeveelheden."""
     doc = frappe.get_doc("Location Pick", location_pick)
 
     seen_pl_items = set()
@@ -339,26 +363,21 @@ def apply_pick_qty_update(location_pick):
                 WHERE lpl.pick_list_item = %s AND lp.docstatus = 1
             """, line.pick_list_item)[0][0]
         )
-
-        frappe.db.set_value(
-            "Pick List Item", line.pick_list_item, "picked_qty", wms_qty
-        )
+        frappe.db.set_value("Pick List Item", line.pick_list_item, "picked_qty", wms_qty)
 
     frappe.db.commit()
 
 
-def _get_pl_item_batch_no(pl_item):
-    """
-    Return the batch_no for a Pick List Item row.
+# ----------------------------------------------------------------------
+# Helpers
+# ----------------------------------------------------------------------
 
-    ERPNext v15: batch_no is stored directly on the row.
-    ERPNext v16: batch_no may be empty; the actual batch is in the
-                 Serial and Batch Bundle created on Pick List submit.
-    """
+
+def _get_pl_item_batch_no(pl_item):
+    """Geef het batch_no voor een Pick List Item rij (v15 en v16 compatibel)."""
     if getattr(pl_item, "batch_no", None):
         return pl_item.batch_no
 
-    # v16 fallback: read bundle from DB (may not be in memory yet)
     bundle = getattr(pl_item, "serial_and_batch_bundle", None)
     if not bundle and getattr(pl_item, "name", None):
         bundle = frappe.db.get_value(
@@ -367,9 +386,7 @@ def _get_pl_item_batch_no(pl_item):
 
     if bundle:
         entry = frappe.db.get_value(
-            "Serial and Batch Entry",
-            {"parent": bundle},
-            "batch_no",
+            "Serial and Batch Entry", {"parent": bundle}, "batch_no"
         )
         return entry or None
 
@@ -377,9 +394,8 @@ def _get_pl_item_batch_no(pl_item):
 
 
 def _order_by_for_strategy(strategy):
-    """Return SQL ORDER BY clause for the given picking strategy."""
+    """Geef SQL ORDER BY clause voor de gekozen pickstrategie."""
     if "FEFO" in strategy:
-        # Null expiry dates go last (treated as 9999-12-31)
         return (
             "CASE WHEN b.expiry_date IS NULL THEN '9999-12-31' "
             "     ELSE b.expiry_date END ASC, "
@@ -387,5 +403,4 @@ def _order_by_for_strategy(strategy):
         )
     if "FIFO" in strategy:
         return "b.creation ASC, sl.pick_sequence ASC"
-    # Default: Pick Sequence
     return "sl.pick_sequence ASC, bls.qty DESC"

@@ -1,0 +1,115 @@
+{
+ "actions": [],
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "storage_location",
+  "zone",
+  "item_code",
+  "item_name",
+  "batch_no",
+  "customer",
+  "system_qty",
+  "counted_qty",
+  "difference",
+  "status",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "storage_location",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Locatie",
+   "options": "Storage Location",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "zone",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Zone",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Artikel",
+   "options": "Item",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Artikelnaam",
+   "read_only": 1
+  },
+  {
+   "fieldname": "batch_no",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Batch",
+   "options": "Batch",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Klant",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "system_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Systeem Hoeveelheid",
+   "read_only": 1
+  },
+  {
+   "fieldname": "counted_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Getelde Hoeveelheid"
+  },
+  {
+   "fieldname": "difference",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Verschil",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Pending\nCounted\nCorrected",
+   "default": "Pending",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Opmerkingen"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WMS",
+ "name": "WMS Cycle Count Line",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "idx",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 0
+}

@@ -2,17 +2,27 @@ app_name = "frappe_wms"
 
 fixtures = [
     {"doctype": "Workspace", "filters": [["name", "in", ["WMS"]]]},
-    {"doctype": "Custom Field", "filters": [["dt", "=", "Purchase Receipt Item"], ["fieldname", "=", "wms_customer"]]},
+    {
+        "doctype": "Custom Field",
+        "filters": [[
+            "dt", "=", "Purchase Receipt Item"
+        ], [
+            "fieldname", "in", [
+                "wms_customer", "wms_require_qc", "wms_cross_dock", "wms_cross_dock_so"
+            ]
+        ]],
+    },
 ]
+
 app_title = "Frappe WMS"
-app_publisher = "Your Company"
+app_publisher = "NEDLOG"
 app_description = "Lightweight WMS location layer for ERPNext"
 app_email = "admin@example.com"
 app_license = "MIT"
-app_version = "0.0.1"
+app_version = "0.2.0"
 
 # ------------------------------------------------------------
-# DocType events
+# DocType events (ERPNext core documents)
 # ------------------------------------------------------------
 doc_events = {
     "Purchase Receipt": {
@@ -28,12 +38,16 @@ doc_events = {
 }
 
 # ------------------------------------------------------------
-# Client-side JS extensions for standard ERPNext DocTypes
+# Client-side JS extensions
 # ------------------------------------------------------------
 doctype_js = {
-    "Pick List": "public/js/pick_list.js",
+    "Pick List":            "public/js/pick_list.js",
     "Batch Location Stock": "public/js/batch_location_stock.js",
-    "Location Pick": "public/js/location_pick.js",
+    "Location Pick":        "public/js/location_pick.js",
+    "Purchase Receipt":     "public/js/purchase_receipt.js",
+    "WMS QC Check":         "public/js/wms_qc_check.js",
+    "WMS Cross Dock":       "public/js/wms_cross_dock.js",
+    "WMS Cycle Count":      "public/js/wms_cycle_count.js",
 }
 
 doctype_list_js = {

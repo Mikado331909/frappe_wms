@@ -84,6 +84,17 @@ class BatchLocationStock(Document):
 
 
 @frappe.whitelist()
+def get_putaway_suggestion(warehouse, batch_no, item_code=None):
+    """
+    Geef de putaway suggestie terug voor een batch in een warehouse.
+    Roept de putaway rule engine aan en geeft zone + locatie terug.
+    """
+    from frappe_wms.wms.events.utils import evaluate_putaway_rule
+    customer = frappe.db.get_value("Batch", batch_no, "customer") or None
+    return evaluate_putaway_rule(warehouse, customer, item_code)
+
+
+@frappe.whitelist()
 def check_location_compatibility(to_location, batch_no, qty):
     """
     Controleer of verplaatsen naar een locatie toegestaan is en geef eventuele

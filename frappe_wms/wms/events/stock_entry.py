@@ -2,6 +2,7 @@ import frappe
 from frappe_wms.wms.events.utils import (
     iter_batch_entries,
     get_receiving_location,
+    get_inspection_location,
     get_picking_staging_location,
     add_location_qty,
     deduct_location_qty,
@@ -15,6 +16,7 @@ def on_submit(doc, method=None):
 
 
 def _process_source(doc, item):
+    """Verwerk de bronkant van een Stock Entry (aftrekken van staging)."""
     s_warehouse = item.s_warehouse
     if not s_warehouse:
         return
@@ -46,24 +48,50 @@ def _process_source(doc, item):
             qty=deduct_qty,
             ref_doctype="Stock Entry",
             ref_name=doc.name,
+            movement_type="Production",
         )
 
 
 def _process_target(doc, item):
+    """
+    Verwerk de doelkant van een Stock Entry.
+
+    Routering:
+    - Productie retour (Material Transfer + work_order): → Inspection locatie
+    - Overig (productie output, etc.): → RECV locatie
+    """
     t_warehouse = item.t_warehouse
     if not t_warehouse:
         return
-    receiving_loc = get_receiving_location(t_warehouse, raise_if_missing=False)
-    if not receiving_loc:
+
+    # Productie retour = Material Transfer vanuit productie terug naar magazijn
+    is_production_return = (
+        doc.purpose in ("Material Transfer",)
+        and getattr(doc, "work_order", None)
+    )
+
+    if is_production_return:
+        dest_loc = get_inspection_location(t_warehouse, raise_if_missing=False)
+        movement_type = "Production Return"
+        if not dest_loc:
+            dest_loc = get_receiving_location(t_warehouse, raise_if_missing=False)
+            movement_type = "Inbound"
+    else:
+        dest_loc = get_receiving_location(t_warehouse, raise_if_missing=False)
+        movement_type = "Production"
+
+    if not dest_loc:
         return
+
     for batch_no, qty in iter_batch_entries(item):
         add_location_qty(
             item_code=item.item_code,
             batch_no=batch_no,
             warehouse=t_warehouse,
-            storage_location=receiving_loc,
+            storage_location=dest_loc,
             qty=qty,
             uom=item.uom,
             ref_doctype="Stock Entry",
             ref_name=doc.name,
+            movement_type=movement_type,
         )

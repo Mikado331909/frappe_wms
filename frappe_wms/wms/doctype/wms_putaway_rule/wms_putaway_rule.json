@@ -1,0 +1,97 @@
+{
+ "actions": [],
+ "autoname": "WMS-PAR-.YYYY.-.#####",
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "priority",
+  "warehouse",
+  "col_break_0",
+  "customer",
+  "item_group",
+  "section_target",
+  "target_zone",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Prioriteit",
+   "reqd": 1,
+   "default": "10",
+   "description": "Lagere waarde = hogere prioriteit. Regels worden op prioriteit gesorteerd."
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "description": "Leeg = geldt voor alle warehouses"
+  },
+  {
+   "fieldname": "col_break_0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Klant",
+   "options": "Customer",
+   "description": "Leeg = geldt voor alle klanten"
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Artikelgroep",
+   "options": "Item Group",
+   "description": "Leeg = geldt voor alle artikelgroepen"
+  },
+  {
+   "fieldname": "section_target",
+   "fieldtype": "Section Break",
+   "label": "Doellocatie"
+  },
+  {
+   "fieldname": "target_zone",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Doelzone",
+   "options": "WMS Zone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Actief",
+   "default": "1"
+  }
+ ],
+ "links": [],
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WMS",
+ "name": "WMS Putaway Rule",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1, "delete": 1, "email": 1, "export": 1, "print": 1,
+   "read": 1, "report": 1, "role": "Stock Manager", "share": 1, "write": 1
+  },
+  {
+   "create": 0, "delete": 0, "email": 1, "export": 1, "print": 1,
+   "read": 1, "report": 1, "role": "Stock User", "share": 1, "write": 0
+  }
+ ],
+ "sort_field": "priority",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}

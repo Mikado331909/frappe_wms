@@ -4,23 +4,73 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "section_inbound",
   "auto_create_on_receipt",
-  "validate_against_erpnext"
+  "validate_against_erpnext",
+  "section_putaway",
+  "default_putaway_mode",
+  "section_qc",
+  "qc_trigger",
+  "section_crossdock",
+  "auto_create_cross_dock"
  ],
  "fields": [
   {
+   "fieldname": "section_inbound",
+   "fieldtype": "Section Break",
+   "label": "Inbound Instellingen"
+  },
+  {
    "fieldname": "auto_create_on_receipt",
    "fieldtype": "Check",
-   "label": "Auto-create Location Stock on Purchase Receipt Submit",
+   "label": "Auto-create Location Stock bij Purchase Receipt",
    "default": "1",
-   "description": "When enabled, submitting a Purchase Receipt automatically places batch qty into the warehouse's Receiving location."
+   "description": "Bij indienen van een Purchase Receipt wordt automatisch WMS locatievoorraad aangemaakt."
   },
   {
    "fieldname": "validate_against_erpnext",
    "fieldtype": "Check",
-   "label": "Validate Total Location Qty Against ERPNext Stock",
+   "label": "Valideer WMS Voorraad tegen ERPNext Stock",
    "default": "1",
-   "description": "When enabled, Batch Location Stock saves are rejected when the sum of location qty for Item + Batch + Warehouse exceeds ERPNext's SLE qty."
+   "description": "Weigert WMS-wijzigingen als de totale locatiehoeveelheid de ERPNext SLE-hoeveelheid overschrijdt."
+  },
+  {
+   "fieldname": "section_putaway",
+   "fieldtype": "Section Break",
+   "label": "Putaway Instellingen"
+  },
+  {
+   "fieldname": "default_putaway_mode",
+   "fieldtype": "Select",
+   "label": "Putaway Modus",
+   "options": "Manual\nSuggest\nEnforce",
+   "default": "Suggest",
+   "description": "Manual: geen suggestie. Suggest: systeem toont aanbevolen locatie. Enforce: medewerker moet afwijking verklaren."
+  },
+  {
+   "fieldname": "section_qc",
+   "fieldtype": "Section Break",
+   "label": "QC Instellingen"
+  },
+  {
+   "fieldname": "qc_trigger",
+   "fieldtype": "Select",
+   "label": "QC Trigger",
+   "options": "Per Receipt Line\nNever",
+   "default": "Per Receipt Line",
+   "description": "Per Receipt Line: medewerker vlagt per PR-regel of QC nodig is. Never: nooit automatisch."
+  },
+  {
+   "fieldname": "section_crossdock",
+   "fieldtype": "Section Break",
+   "label": "Cross-dock Instellingen"
+  },
+  {
+   "fieldname": "auto_create_cross_dock",
+   "fieldtype": "Check",
+   "label": "Auto-detecteer Cross-dock via PO → SO koppeling",
+   "default": "1",
+   "description": "Detecteert automatisch cross-dock wanneer een Purchase Order gekoppeld is aan een Sales Order."
   }
  ],
  "issingle": 1,
@@ -32,28 +82,12 @@
  "owner": "Administrator",
  "permissions": [
   {
-   "create": 1,
-   "delete": 0,
-   "email": 0,
-   "export": 0,
-   "print": 0,
-   "read": 1,
-   "report": 0,
-   "role": "System Manager",
-   "share": 0,
-   "write": 1
+   "create": 1, "delete": 0, "email": 0, "export": 0, "print": 0,
+   "read": 1, "report": 0, "role": "System Manager", "share": 0, "write": 1
   },
   {
-   "create": 0,
-   "delete": 0,
-   "email": 0,
-   "export": 0,
-   "print": 0,
-   "read": 1,
-   "report": 0,
-   "role": "Stock Manager",
-   "share": 0,
-   "write": 0
+   "create": 0, "delete": 0, "email": 0, "export": 0, "print": 0,
+   "read": 1, "report": 0, "role": "Stock Manager", "share": 0, "write": 0
   }
  ],
  "sort_field": "modified",

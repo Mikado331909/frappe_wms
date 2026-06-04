@@ -1,0 +1,110 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "count_date",
+  "warehouse",
+  "status",
+  "col_break_0",
+  "counted_by",
+  "section_zones",
+  "count_zones",
+  "section_lines",
+  "count_lines"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "WMS-CC-.YYYY.-.#####",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "count_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Teldatum",
+   "reqd": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nIn Progress\nCompleted\nCancelled",
+   "default": "Draft"
+  },
+  {
+   "fieldname": "col_break_0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "counted_by",
+   "fieldtype": "Link",
+   "label": "Geteld door",
+   "options": "User"
+  },
+  {
+   "fieldname": "section_zones",
+   "fieldtype": "Section Break",
+   "label": "Te tellen zones"
+  },
+  {
+   "fieldname": "count_zones",
+   "fieldtype": "Table",
+   "label": "Zones",
+   "options": "WMS Cycle Count Zone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_lines",
+   "fieldtype": "Section Break",
+   "label": "Telregels"
+  },
+  {
+   "fieldname": "count_lines",
+   "fieldtype": "Table",
+   "label": "Telregels",
+   "options": "WMS Cycle Count Line"
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WMS",
+ "name": "WMS Cycle Count",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1, "cancel": 1, "create": 1, "delete": 1, "email": 1,
+   "export": 1, "print": 1, "read": 1, "report": 1,
+   "role": "Stock Manager", "share": 1, "submit": 1, "write": 1
+  },
+  {
+   "amend": 0, "cancel": 0, "create": 0, "delete": 0, "email": 1,
+   "export": 1, "print": 1, "read": 1, "report": 1,
+   "role": "Stock User", "share": 1, "submit": 0, "write": 1
+  }
+ ],
+ "sort_field": "count_date",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

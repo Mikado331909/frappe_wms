@@ -39,4 +39,5 @@ def on_submit(doc, method=None):
                 qty=deduct_qty,
                 ref_doctype="Delivery Note",
                 ref_name=doc.name,
+                movement_type="Pick",
             )

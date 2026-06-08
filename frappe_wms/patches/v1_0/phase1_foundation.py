@@ -9,19 +9,27 @@ Fase 1 fundament patch:
 import frappe
 
 
+def _add_col(table, column, col_type):
+    """Add column if it doesn't exist — safe to re-run."""
+    try:
+        frappe.db.sql(
+            f"ALTER TABLE `{table}` ADD COLUMN IF NOT EXISTS `{column}` {col_type}"
+        )
+    except Exception:
+        pass  # Column already exists on DB versions without IF NOT EXISTS support
+
+
 def execute():
     # ------------------------------------------------------------------
     # Storage Location: zone + max_qty
     # ------------------------------------------------------------------
-    for col, dtype in [("zone", "varchar(140)"), ("max_qty", "decimal(21,9) default 0")]:
-        if not frappe.db.has_column("Storage Location", col):
-            frappe.db.add_column("Storage Location", col, dtype)
+    _add_col("tabStorage Location", "zone", "varchar(140) DEFAULT NULL")
+    _add_col("tabStorage Location", "max_qty", "decimal(21,9) DEFAULT 0")
 
     # ------------------------------------------------------------------
     # Batch Location Stock: zone
     # ------------------------------------------------------------------
-    if not frappe.db.has_column("Batch Location Stock", "zone"):
-        frappe.db.add_column("Batch Location Stock", "zone", "varchar(140)")
+    _add_col("tabBatch Location Stock", "zone", "varchar(140) DEFAULT NULL")
 
     # Backfill zone vanuit Storage Location
     frappe.db.sql("""
@@ -35,8 +43,7 @@ def execute():
     # ------------------------------------------------------------------
     # Batch Location Movement: movement_type
     # ------------------------------------------------------------------
-    if not frappe.db.has_column("Batch Location Movement", "movement_type"):
-        frappe.db.add_column("Batch Location Movement", "movement_type", "varchar(50)")
+    _add_col("tabBatch Location Movement", "movement_type", "varchar(50) DEFAULT NULL")
 
     # Backfill bestaande inbound movements
     frappe.db.sql("""
@@ -57,8 +64,7 @@ def execute():
     # ------------------------------------------------------------------
     # Location Pick Line: pick_list
     # ------------------------------------------------------------------
-    if not frappe.db.has_column("Location Pick Line", "pick_list"):
-        frappe.db.add_column("Location Pick Line", "pick_list", "varchar(140)")
+    _add_col("tabLocation Pick Line", "pick_list", "varchar(140) DEFAULT NULL")
 
     # Backfill vanuit Pick List Item → parent (Pick List)
     frappe.db.sql("""
@@ -74,7 +80,11 @@ def execute():
     # ------------------------------------------------------------------
     # Frappe's migrate heeft de nieuwe tabel al aangemaakt via de JSON.
     # We lezen de legacy pick_list kolom en maken child-rijen aan.
-    if not frappe.db.has_column("Location Pick", "pick_list"):
+    has_legacy = frappe.db.sql(
+        "SHOW COLUMNS FROM `tabLocation Pick` LIKE 'pick_list'"
+    )
+    if not has_legacy:
+        frappe.db.commit()
         return  # Niets te migreren
 
     picks = frappe.db.sql(
@@ -94,3 +104,5 @@ def execute():
                 "parentfield": "pick_lists",
                 "pick_list": pick.pick_list,
             }).insert(ignore_permissions=True)
+
+    frappe.db.commit()

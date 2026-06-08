@@ -5,9 +5,15 @@ def execute():
     """Add customer column to Batch Location Stock and Batch Location Movement,
     then backfill from the linked Batch record."""
 
-    for doctype in ("Batch Location Stock", "Batch Location Movement"):
-        if not frappe.db.has_column(doctype, "customer"):
-            frappe.db.add_column(doctype, "customer", "varchar(140)")
+    for table in ("tabBatch Location Stock", "tabBatch Location Movement"):
+        # Use IF NOT EXISTS so the patch is safe to re-run
+        try:
+            frappe.db.sql(
+                f"ALTER TABLE `{table}` ADD COLUMN IF NOT EXISTS `customer` VARCHAR(140) DEFAULT NULL"
+            )
+        except Exception:
+            # Column may already exist on some DB versions that don't support IF NOT EXISTS
+            pass
 
     frappe.db.sql("""
         UPDATE `tabBatch Location Stock` bls
@@ -24,3 +30,5 @@ def execute():
         WHERE b.customer IS NOT NULL AND b.customer != ''
           AND (blm.customer IS NULL OR blm.customer = '')
     """)
+
+    frappe.db.commit()

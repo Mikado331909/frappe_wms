@@ -159,7 +159,7 @@ def on_submit(doc, method=None):
                         "batch_no": batch_no,
                         "warehouse": warehouse,
                         "xdock_location": xdock_loc,
-                        "sales_order": cross_dock_so,
+                        "sales_order": cross_dock_so if isinstance(cross_dock_so, str) else None,
                         "qty": qty,
                         "uom": item.uom,
                         "customer": customer,

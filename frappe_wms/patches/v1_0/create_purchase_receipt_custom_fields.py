@@ -12,6 +12,15 @@ import frappe
 
 _FIELDS = [
     {
+        "dt": "Batch",
+        "fieldname": "customer",
+        "fieldtype": "Link",
+        "options": "Customer",
+        "label": "Customer (WMS)",
+        "insert_after": "item",
+        "description": "Customer that owns this batch for WMS segregation.",
+    },
+    {
         "dt": "Purchase Receipt Item",
         "fieldname": "wms_customer",
         "fieldtype": "Link",

@@ -12,6 +12,10 @@ fixtures = [
             ]
         ]],
     },
+    {
+        "doctype": "Custom Field",
+        "filters": [["dt", "=", "Batch"], ["fieldname", "=", "customer"]],
+    },
 ]
 
 app_title = "Frappe WMS"

@@ -6,12 +6,15 @@ def _column_exists(table, column):
 
 
 def _add_col(table, column, col_type):
+    if _column_exists(table, column):
+        return
+
     try:
-        frappe.db.sql(f"ALTER TABLE `{table}` ADD COLUMN IF NOT EXISTS `{column}` {col_type}")
+        frappe.db.sql_ddl(f"ALTER TABLE `{table}` ADD COLUMN IF NOT EXISTS `{column}` {col_type}")
     except Exception:
         # Older MariaDB versions may not support IF NOT EXISTS.
         if not _column_exists(table, column):
-            frappe.db.sql(f"ALTER TABLE `{table}` ADD COLUMN `{column}` {col_type}")
+            frappe.db.sql_ddl(f"ALTER TABLE `{table}` ADD COLUMN `{column}` {col_type}")
 
 
 def _ensure_batch_customer_field():

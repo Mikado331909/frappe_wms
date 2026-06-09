@@ -15,14 +15,14 @@ def _add_col(table, column, col_type):
         return
 
     try:
-        frappe.db.sql(
+        frappe.db.sql_ddl(
             f"ALTER TABLE `{table}` ADD COLUMN IF NOT EXISTS `{column}` {col_type}"
         )
     except Exception:
         pass
 
     if not _column_exists(table, column):
-        frappe.db.sql(f"ALTER TABLE `{table}` ADD COLUMN `{column}` {col_type}")
+        frappe.db.sql_ddl(f"ALTER TABLE `{table}` ADD COLUMN `{column}` {col_type}")
 
 
 def execute():

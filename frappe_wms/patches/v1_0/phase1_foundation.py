@@ -1,22 +1,12 @@
 """
-Fase 1 fundament patch:
-- Voegt zone + max_qty toe aan Storage Location
-- Voegt zone toe aan Batch Location Stock (backfill)
-- Voegt movement_type toe aan Batch Location Movement
-- Voegt pick_list toe aan Location Pick Line (backfill vanuit Pick List Item)
-- Migreert Location Pick.pick_list → Location Pick Source child tabel
+Phase 1 foundation patch:
+- Add zone + max_qty to Storage Location
+- Add zone to Batch Location Stock and backfill it
+- Add movement_type to Batch Location Movement and backfill it
+- Add pick_list to Location Pick Line and backfill it from Pick List Item
+- Migrate Location Pick.pick_list to the Location Pick Source child table
 """
 import frappe
-
-
-def _add_col(table, column, col_type):
-    """Add column if it doesn't exist — safe to re-run."""
-    try:
-        frappe.db.sql(
-            f"ALTER TABLE `{table}` ADD COLUMN IF NOT EXISTS `{column}` {col_type}"
-        )
-    except Exception:
-        pass  # Column already exists on DB versions without IF NOT EXISTS support
 
 
 def _column_exists(table, column):
@@ -29,29 +19,31 @@ def _add_col(table, column, col_type):
         return
 
     try:
-        frappe.db.sql(
+        frappe.db.sql_ddl(
             f"ALTER TABLE `{table}` ADD COLUMN IF NOT EXISTS `{column}` {col_type}"
         )
     except Exception:
         pass
 
     if not _column_exists(table, column):
-        frappe.db.sql(f"ALTER TABLE `{table}` ADD COLUMN `{column}` {col_type}")
+        frappe.db.sql_ddl(f"ALTER TABLE `{table}` ADD COLUMN `{column}` {col_type}")
 
 
 def execute():
-    # ------------------------------------------------------------------
     # Storage Location: zone + max_qty
-    # ------------------------------------------------------------------
     _add_col("tabStorage Location", "zone", "varchar(140) DEFAULT NULL")
     _add_col("tabStorage Location", "max_qty", "decimal(21,9) DEFAULT 0")
 
-    # ------------------------------------------------------------------
     # Batch Location Stock: zone
-    # ------------------------------------------------------------------
     _add_col("tabBatch Location Stock", "zone", "varchar(140) DEFAULT NULL")
 
-    # Backfill zone vanuit Storage Location
+    # Batch Location Movement: movement_type
+    _add_col("tabBatch Location Movement", "movement_type", "varchar(50) DEFAULT NULL")
+
+    # Location Pick Line: pick_list
+    _add_col("tabLocation Pick Line", "pick_list", "varchar(140) DEFAULT NULL")
+
+    # Backfill zone from Storage Location.
     frappe.db.sql("""
         UPDATE `tabBatch Location Stock` bls
         INNER JOIN `tabStorage Location` sl ON sl.name = bls.storage_location
@@ -60,12 +52,7 @@ def execute():
           AND (bls.zone IS NULL OR bls.zone = '')
     """)
 
-    # ------------------------------------------------------------------
-    # Batch Location Movement: movement_type
-    # ------------------------------------------------------------------
-    _add_col("tabBatch Location Movement", "movement_type", "varchar(50) DEFAULT NULL")
-
-    # Backfill bestaande inbound movements
+    # Backfill existing inbound movements.
     frappe.db.sql("""
         UPDATE `tabBatch Location Movement`
         SET movement_type = 'Inbound'
@@ -81,12 +68,7 @@ def execute():
           AND (movement_type IS NULL OR movement_type = '')
     """)
 
-    # ------------------------------------------------------------------
-    # Location Pick Line: pick_list
-    # ------------------------------------------------------------------
-    _add_col("tabLocation Pick Line", "pick_list", "varchar(140) DEFAULT NULL")
-
-    # Backfill vanuit Pick List Item → parent (Pick List)
+    # Backfill from Pick List Item to parent Pick List.
     frappe.db.sql("""
         UPDATE `tabLocation Pick Line` lpl
         INNER JOIN `tabPick List Item` pli ON pli.name = lpl.pick_list_item
@@ -95,17 +77,13 @@ def execute():
           AND pli.parent IS NOT NULL
     """)
 
-    # ------------------------------------------------------------------
-    # Location Pick → Location Pick Source migratie
-    # ------------------------------------------------------------------
-    # Frappe's migrate heeft de nieuwe tabel al aangemaakt via de JSON.
-    # We lezen de legacy pick_list kolom en maken child-rijen aan.
+    # Migrate legacy Location Pick.pick_list to Location Pick Source child rows.
     has_legacy = frappe.db.sql(
         "SHOW COLUMNS FROM `tabLocation Pick` LIKE 'pick_list'"
     )
     if not has_legacy:
         frappe.db.commit()
-        return  # Niets te migreren
+        return
 
     picks = frappe.db.sql(
         "SELECT name, pick_list FROM `tabLocation Pick` WHERE pick_list IS NOT NULL AND pick_list != ''",

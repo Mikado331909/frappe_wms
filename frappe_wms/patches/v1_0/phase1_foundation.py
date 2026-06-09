@@ -13,6 +13,10 @@ def _column_exists(table, column):
     return bool(frappe.db.sql(f"SHOW COLUMNS FROM `{table}` LIKE %s", (column,)))
 
 
+def _table_exists(table):
+    return bool(frappe.db.sql("SHOW TABLES LIKE %s", (table,)))
+
+
 def _add_col(table, column, col_type):
     """Add column if it doesn't exist - safe to re-run."""
     if _column_exists(table, column):
@@ -78,6 +82,11 @@ def execute():
     """)
 
     # Migrate legacy Location Pick.pick_list to Location Pick Source child rows.
+    # During pre-model-sync on new installs, the child table may not exist yet.
+    if not _table_exists("tabLocation Pick Source"):
+        frappe.db.commit()
+        return
+
     has_legacy = frappe.db.sql(
         "SHOW COLUMNS FROM `tabLocation Pick` LIKE 'pick_list'"
     )
@@ -90,17 +99,27 @@ def execute():
         as_dict=True,
     )
     for pick in picks:
-        exists = frappe.db.exists(
-            "Location Pick Source",
-            {"parent": pick.name, "pick_list": pick.pick_list},
-        )
+        exists = frappe.db.sql("""
+            SELECT name
+            FROM `tabLocation Pick Source`
+            WHERE parent = %s AND pick_list = %s
+            LIMIT 1
+        """, (pick.name, pick.pick_list))
         if not exists:
-            frappe.get_doc({
-                "doctype": "Location Pick Source",
-                "parent": pick.name,
-                "parenttype": "Location Pick",
-                "parentfield": "pick_lists",
-                "pick_list": pick.pick_list,
-            }).insert(ignore_permissions=True)
+            frappe.db.sql("""
+                INSERT INTO `tabLocation Pick Source`
+                    (name, creation, modified, modified_by, owner, docstatus, idx,
+                     parent, parenttype, parentfield, pick_list)
+                VALUES
+                    (%s, NOW(), NOW(), %s, %s, 0, 1, %s, %s, %s, %s)
+            """, (
+                frappe.generate_hash(length=10),
+                frappe.session.user,
+                frappe.session.user,
+                pick.name,
+                "Location Pick",
+                "pick_lists",
+                pick.pick_list,
+            ))
 
     frappe.db.commit()

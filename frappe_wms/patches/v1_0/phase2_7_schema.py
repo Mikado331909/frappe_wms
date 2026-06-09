@@ -6,6 +6,25 @@ Fasen 2-7 schema patch:
 import frappe
 
 
+def _column_exists(table, column):
+    return bool(frappe.db.sql(f"SHOW COLUMNS FROM `{table}` LIKE %s", (column,)))
+
+
+def _add_col(table, column, col_type):
+    if _column_exists(table, column):
+        return
+
+    try:
+        frappe.db.sql(
+            f"ALTER TABLE `{table}` ADD COLUMN IF NOT EXISTS `{column}` {col_type}"
+        )
+    except Exception:
+        pass
+
+    if not _column_exists(table, column):
+        frappe.db.sql(f"ALTER TABLE `{table}` ADD COLUMN `{column}` {col_type}")
+
+
 def execute():
     # ------------------------------------------------------------------
     # Custom fields op Purchase Receipt Item (naast wms_customer)
@@ -45,6 +64,8 @@ def execute():
     # ------------------------------------------------------------------
     # Backfill movement_type voor bestaande Batch Location Movement records
     # ------------------------------------------------------------------
+    _add_col("tabBatch Location Movement", "movement_type", "varchar(50) DEFAULT NULL")
+
     # Inbound (geen from_location)
     frappe.db.sql("""
         UPDATE `tabBatch Location Movement`

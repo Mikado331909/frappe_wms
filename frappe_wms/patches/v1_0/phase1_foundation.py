@@ -19,6 +19,26 @@ def _add_col(table, column, col_type):
         pass  # Column already exists on DB versions without IF NOT EXISTS support
 
 
+def _column_exists(table, column):
+    return bool(frappe.db.sql(f"SHOW COLUMNS FROM `{table}` LIKE %s", (column,)))
+
+
+def _add_col(table, column, col_type):
+    """Add column if it doesn't exist - safe to re-run."""
+    if _column_exists(table, column):
+        return
+
+    try:
+        frappe.db.sql(
+            f"ALTER TABLE `{table}` ADD COLUMN IF NOT EXISTS `{column}` {col_type}"
+        )
+    except Exception:
+        pass
+
+    if not _column_exists(table, column):
+        frappe.db.sql(f"ALTER TABLE `{table}` ADD COLUMN `{column}` {col_type}")
+
+
 def execute():
     # ------------------------------------------------------------------
     # Storage Location: zone + max_qty

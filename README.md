@@ -22,11 +22,14 @@ Adds zone-based location tracking, directed putaway, QC, cross-docking, producti
    - [Cycle Counting](#cycle-counting)
 6. [Picking Strategies](#picking-strategies)
 7. [Customer Segregation](#customer-segregation)
-8. [ERPNext v16 Compatibility](#erpnext-v16-compatibility)
-9. [Configuration](#configuration)
-10. [Installation](#installation)
-11. [Reports](#reports)
-12. [Design Decisions](#design-decisions)
+8. [NEDLOG Target Operating Model](#nedlog-target-operating-model)
+9. [Material Ownership and Allocation Roadmap](#material-ownership-and-allocation-roadmap)
+10. [ERPNext v16 Compatibility](#erpnext-v16-compatibility)
+11. [Configuration](#configuration)
+12. [Installation](#installation)
+13. [Reports](#reports)
+14. [Acceptance Test Roadmap](#acceptance-test-roadmap)
+15. [Design Decisions](#design-decisions)
 
 ---
 
@@ -43,7 +46,7 @@ Frappe WMS tracks **where exactly** items sit within an ERPNext warehouse (zone 
 - **Cross-docking** — detected automatically via PO→SO links or flagged manually
 - **Production bulk picking** — combine multiple Pick Lists into one Location Pick
 - **Production return flow** — returned raw materials go to Inspection zone
-- **Cycle counting** — zone-based stock counts with automatic BLS corrections
+- **Cycle counting** — zone-based stock counts with current BLS corrections and a target design for ERPNext-backed reconciliation
 - Records every movement in an immutable audit trail with movement type and customer
 - **4 KPI reports** — zone occupancy, customer stock, pick performance, inbound/outbound volume
 
@@ -426,6 +429,12 @@ WMS Cycle Count indienen:
 
 ---
 
+**Current implementation note:** submitting a WMS Cycle Count applies differences directly to Batch Location Stock and records a `Batch Location Movement` with `movement_type = Cycle Count`.
+
+**Target design:** financial stock corrections should be applied through ERPNext Stock Reconciliation or a controlled ERPNext Stock Entry first. WMS location corrections should then mirror the approved ERPNext correction so ERPNext stock ledger and WMS location totals do not drift apart.
+
+---
+
 ## Picking Strategies
 
 | Strategy | Sort Logic |
@@ -453,6 +462,83 @@ WMS dwingt klantscheiding af op **opslaglocaties** (type: Storage / Active Stora
 **Transit-locaties** (QC Hold, Inspection, Cross-dock, Quarantine, Staging) zijn vrijgesteld van klantscheiding — daar mogen meerdere klanten naast elkaar staan.
 
 De klant wordt automatisch opgepikt van het Batch-record. Op de Purchase Receipt regel is een `Customer (WMS)` veld beschikbaar; bij submit wordt deze klant naar het Batch-record geschreven zodat alle toekomstige bewegingen de klant automatisch kennen.
+
+---
+
+## NEDLOG Target Operating Model
+
+This section describes the target operating model for NEDLOG's Tunisia operation. It is a roadmap and design reference for the next implementation phase; not every item below is implemented in the current codebase yet.
+
+NEDLOG operates one central warehouse and two production units. In ERPNext these locations should remain ERPNext Warehouses because ERPNext owns the stock ledger, valuation, reserved quantities, projected quantities, purchasing, manufacturing and accounting. Frappe WMS sits below those warehouses as the operational layer for physical locations, putaway, picking, customer segregation and staging.
+
+The intended split is:
+
+| Layer | Source of truth | Purpose |
+|---|---|---|
+| ERPNext Item | ERPNext | Defines the physical material or finished good |
+| ERPNext Warehouse | ERPNext | Defines financial and stock-ledger ownership/status |
+| ERPNext Bin / Stock Reservation | ERPNext | Tracks actual, reserved, ordered, planned and projected quantities |
+| Batch / Lot ownership | WMS extension on ERPNext batch context | Identifies customer ownership and billing mode |
+| Storage Location | Frappe WMS | Identifies the exact physical bin, rack, shelf or staging area |
+| Batch Location Stock | Frappe WMS | Tracks exact item + batch + warehouse + location quantity |
+
+The same physical material should normally remain one ERPNext Item. Do not create separate items only because the material is customer supplied, NEDLOG owned, directly billed or billed on consumption. Use warehouse status plus batch/lot ownership metadata to distinguish the commercial and ownership context.
+
+Example:
+
+```text
+Item: FAB-COTTON-220
+
+Administrative stock status:
+- Company Owned Raw Material - TUN
+- Customer Supplied Raw Material - TUN
+- Customer Reserved Raw Material - TUN
+
+Physical WMS locations:
+- WH-A-01-01
+- WH-A-01-02
+- PU1-STAGE-01
+```
+
+ERPNext answers "how much stock exists and how is it valued". WMS answers "where is it, who owns this batch, and which order or production unit can use it".
+
+---
+
+## Material Ownership and Allocation Roadmap
+
+This section is roadmap documentation. The current implementation already tracks customer segregation through batch/customer context and physical locations. The target design extends this into a formal material allocation layer between ERPNext BOM/Pick List and WMS Location Pick.
+
+Target ownership modes:
+
+| Ownership mode | Meaning | Stock value for NEDLOG |
+|---|---|---|
+| Customer Supplied | Customer sends material to NEDLOG for production | Not owned by NEDLOG |
+| Company Owned | NEDLOG buys and owns the material | Owned by NEDLOG until consumed/sold |
+| Bought for Customer - Direct Billed | NEDLOG buys material for a customer and bills it directly | Should move to customer-reserved/commercially billed status |
+| Bought for Customer - Bill on Consumption | NEDLOG buys material and bills based on actual use | Owned by NEDLOG until consumption/billing event |
+
+Target allocation flow:
+
+```text
+Sales Order / Production Plan / Work Order
+    -> BOM material requirement
+    -> WMS Material Allocation
+    -> Shortage report per customer/order/component
+    -> Location Pick
+    -> Production Staging
+    -> ERPNext Stock Entry consumption
+```
+
+The planned `WMS Material Allocation` layer should:
+
+- explode BOM requirements for a sales order, production plan or work order;
+- allocate required components across customer supplied, bought-for-customer and company-owned batches;
+- respect customer ownership, batch, warehouse and physical location;
+- expose shortage lines per customer, order, finished good and component;
+- generate WMS Location Picks only for allocated material;
+- keep ERPNext reserved/projected quantities as the global control layer.
+
+ERPNext `reserved_qty` and `projected_qty` remain important, but they operate mainly at item + warehouse level. WMS allocation adds the detail needed for customer-owned stock, physical locations and production staging.
 
 ---
 
@@ -579,6 +665,30 @@ bench --site [your-site-name] migrate
 | **Inbound Outbound Volume** | Bewegingsvolume per dag per bewegingstype |
 | **Location Pick Lines** | Dagelijks pickoverzicht — alle pickregels met status |
 | **Location Stock Reconciliation** | WMS qty vs ERPNext SLE qty — discrepanties signaleren |
+
+---
+
+## Acceptance Test Roadmap
+
+This section defines the target acceptance coverage for the NEDLOG WMS operating model. It is roadmap documentation; the current repository does not yet include a complete automated test suite for all scenarios below.
+
+Acceptance tests should prove these flows end to end:
+
+| Scenario | Expected proof |
+|---|---|
+| Inbound | Purchase Receipt or inbound flow creates correct batch/location stock in Receiving, QC Hold or Cross-dock |
+| Putaway | Stock moves from Receiving to a valid physical Storage Location with a movement audit record |
+| Customer segregation | Storage locations block mixed customer ownership, while transit locations allow mixed customers |
+| Mixed ownership allocation | One BOM requirement can be fulfilled from customer supplied, bought-for-customer and company-owned batches |
+| Shortage reporting | Shortage is shown per customer, order, finished good, component and ownership source |
+| Production staging | Location Pick moves allocated material to Production Staging for the correct production unit |
+| ERPNext/WMS reconciliation | WMS location totals never exceed ERPNext stock ledger quantity for the same item, batch and warehouse |
+
+The intended test command should be a standard bench test run against a dedicated test site:
+
+```bash
+bench --site <test-site> run-tests --app frappe_wms
+```
 
 ---
 

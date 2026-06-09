@@ -32,8 +32,12 @@ def _get_cross_dock_so(item):
         return so if so else True  # True = cross-dock maar geen SO opgegeven
 
     # Auto-detectie: Purchase Order Item → Sales Order
-    if item.get("po_detail"):
-        so = frappe.db.get_value("Purchase Order Item", item.po_detail, "sales_order")
+    if item.get("sales_order"):
+        return item.sales_order
+
+    po_item = item.get("purchase_order_item") or item.get("po_detail")
+    if po_item:
+        so = frappe.db.get_value("Purchase Order Item", po_item, "sales_order")
         if so:
             return so
 

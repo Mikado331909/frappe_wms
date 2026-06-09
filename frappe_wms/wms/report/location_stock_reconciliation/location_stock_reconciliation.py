@@ -147,11 +147,21 @@ def _get_data(filters):
 def _get_sle_qty(item_code, batch_no, warehouse):
     result = frappe.db.sql(
         """
-        SELECT COALESCE(SUM(actual_qty), 0)
-        FROM `tabStock Ledger Entry`
-        WHERE item_code = %s AND batch_no = %s AND warehouse = %s
-          AND is_cancelled = 0
+        SELECT COALESCE(SUM(sle.actual_qty), 0)
+        FROM `tabStock Ledger Entry` sle
+        WHERE sle.item_code = %(item_code)s
+          AND sle.warehouse = %(warehouse)s
+          AND sle.is_cancelled = 0
+          AND (
+            sle.batch_no = %(batch_no)s
+            OR EXISTS (
+                SELECT 1
+                FROM `tabSerial and Batch Entry` sbe
+                WHERE sbe.parent = sle.serial_and_batch_bundle
+                  AND sbe.batch_no = %(batch_no)s
+            )
+          )
         """,
-        (item_code, batch_no, warehouse),
+        {"item_code": item_code, "batch_no": batch_no, "warehouse": warehouse},
     )
     return flt(result[0][0]) if result else 0.0

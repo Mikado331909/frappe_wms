@@ -1,7 +1,9 @@
-# add patch module paths here, one per line
+[pre_model_sync]
+
+[post_model_sync]
 frappe_wms.patches.v1_0.create_wms_workspace
 frappe_wms.patches.v1_0.add_wms_to_custom_desktops
+frappe_wms.patches.v1_0.create_purchase_receipt_custom_fields
 frappe_wms.patches.v1_0.add_customer_to_location_stock_and_movement
 frappe_wms.patches.v1_0.phase1_foundation
 frappe_wms.patches.v1_0.phase2_7_schema
-frappe_wms.patches.v1_0.create_purchase_receipt_custom_fields

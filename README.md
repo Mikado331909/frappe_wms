@@ -22,7 +22,7 @@ Adds zone-based location tracking, directed putaway, QC, cross-docking, producti
    - [Cycle Counting](#cycle-counting)
 6. [Picking Strategies](#picking-strategies)
 7. [Customer Segregation](#customer-segregation)
-8. [NEDLOG Target Operating Model](#nedlog-target-operating-model)
+8. [Target Operating Model](#target-operating-model)
 9. [Material Ownership and Allocation Roadmap](#material-ownership-and-allocation-roadmap)
 10. [ERPNext v16 Compatibility](#erpnext-v16-compatibility)
 11. [Configuration](#configuration)
@@ -465,11 +465,11 @@ De klant wordt automatisch opgepikt van het Batch-record. Op de Purchase Receipt
 
 ---
 
-## NEDLOG Target Operating Model
+## Target Operating Model
 
-This section describes the target operating model for NEDLOG's Tunisia operation. It is a roadmap and design reference for the next implementation phase; not every item below is implemented in the current codebase yet.
+This section describes a target operating model for a multi-site warehouse and production operation. It is a roadmap and design reference for the next implementation phase; not every item below is implemented in the current codebase yet.
 
-NEDLOG operates one central warehouse and two production units. In ERPNext these locations should remain ERPNext Warehouses because ERPNext owns the stock ledger, valuation, reserved quantities, projected quantities, purchasing, manufacturing and accounting. Frappe WMS sits below those warehouses as the operational layer for physical locations, putaway, picking, customer segregation and staging.
+The operation has one central warehouse and one or more production units. In ERPNext these locations should remain ERPNext Warehouses because ERPNext owns the stock ledger, valuation, reserved quantities, projected quantities, purchasing, manufacturing and accounting. Frappe WMS sits below those warehouses as the operational layer for physical locations, putaway, picking, customer segregation and staging.
 
 The intended split is:
 
@@ -482,7 +482,7 @@ The intended split is:
 | Storage Location | Frappe WMS | Identifies the exact physical bin, rack, shelf or staging area |
 | Batch Location Stock | Frappe WMS | Tracks exact item + batch + warehouse + location quantity |
 
-The same physical material should normally remain one ERPNext Item. Do not create separate items only because the material is customer supplied, NEDLOG owned, directly billed or billed on consumption. Use warehouse status plus batch/lot ownership metadata to distinguish the commercial and ownership context.
+The same physical material should normally remain one ERPNext Item. Do not create separate items only because the material is customer supplied, company owned, directly billed or billed on consumption. Use warehouse status plus batch/lot ownership metadata to distinguish the commercial and ownership context.
 
 Example:
 
@@ -510,12 +510,12 @@ This section is roadmap documentation. The current implementation already tracks
 
 Target ownership modes:
 
-| Ownership mode | Meaning | Stock value for NEDLOG |
+| Ownership mode | Meaning | Stock value for the company |
 |---|---|---|
-| Customer Supplied | Customer sends material to NEDLOG for production | Not owned by NEDLOG |
-| Company Owned | NEDLOG buys and owns the material | Owned by NEDLOG until consumed/sold |
-| Bought for Customer - Direct Billed | NEDLOG buys material for a customer and bills it directly | Should move to customer-reserved/commercially billed status |
-| Bought for Customer - Bill on Consumption | NEDLOG buys material and bills based on actual use | Owned by NEDLOG until consumption/billing event |
+| Customer Supplied | Customer sends material to the company for production | Not owned by the company |
+| Company Owned | Company buys and owns the material | Owned by the company until consumed/sold |
+| Bought for Customer - Direct Billed | Company buys material for a customer and bills it directly | Should move to customer-reserved/commercially billed status |
+| Bought for Customer - Bill on Consumption | Company buys material and bills based on actual use | Owned by the company until consumption/billing event |
 
 Target allocation flow:
 
@@ -670,7 +670,7 @@ bench --site [your-site-name] migrate
 
 ## Acceptance Test Roadmap
 
-This section defines the target acceptance coverage for the NEDLOG WMS operating model. It is roadmap documentation; the current repository does not yet include a complete automated test suite for all scenarios below.
+This section defines the target acceptance coverage for the WMS operating model. It is roadmap documentation; the current repository does not yet include a complete automated test suite for all scenarios below.
 
 Acceptance tests should prove these flows end to end:
 

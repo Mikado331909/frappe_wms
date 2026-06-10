@@ -19,7 +19,7 @@ fixtures = [
 ]
 
 app_title = "Frappe WMS"
-app_publisher = "NEDLOG"
+app_publisher = "Frappe WMS"
 app_description = "Lightweight WMS location layer for ERPNext"
 app_email = "admin@example.com"
 app_license = "MIT"

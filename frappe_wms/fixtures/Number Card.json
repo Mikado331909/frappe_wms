@@ -1,0 +1,41 @@
+[
+ {
+  "color": "#ffa00a",
+  "doctype": "Number Card",
+  "document_type": "WMS QC Check",
+  "filters_json": "[[\"WMS QC Check\",\"status\",\"=\",\"Pending\"]]",
+  "function": "Count",
+  "is_public": 1,
+  "is_standard": 1,
+  "label": "Pending QC Checks",
+  "module": "WMS",
+  "name": "Pending QC Checks",
+  "type": "Document Type"
+ },
+ {
+  "color": "#7575ff",
+  "doctype": "Number Card",
+  "document_type": "WMS Cross Dock",
+  "filters_json": "[[\"WMS Cross Dock\",\"status\",\"=\",\"Pending\"]]",
+  "function": "Count",
+  "is_public": 1,
+  "is_standard": 1,
+  "label": "Cross-dock Pending",
+  "module": "WMS",
+  "name": "Cross-dock Pending",
+  "type": "Document Type"
+ },
+ {
+  "color": "#28a745",
+  "doctype": "Number Card",
+  "document_type": "Storage Location",
+  "filters_json": "[[\"Storage Location\",\"is_active\",\"=\",1]]",
+  "function": "Count",
+  "is_public": 1,
+  "is_standard": 1,
+  "label": "Active Storage Locations",
+  "module": "WMS",
+  "name": "Active Storage Locations",
+  "type": "Document Type"
+ }
+]

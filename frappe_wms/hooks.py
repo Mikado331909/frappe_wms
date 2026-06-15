@@ -16,6 +16,16 @@ fixtures = [
         "doctype": "Custom Field",
         "filters": [["dt", "=", "Batch"], ["fieldname", "=", "customer"]],
     },
+    {
+        "doctype": "Number Card",
+        "filters": [["name", "in", [
+            "Pending QC Checks", "Cross-dock Pending", "Active Storage Locations"
+        ]]],
+    },
+    {
+        "doctype": "Dashboard Chart",
+        "filters": [["name", "in", ["Warehouse Movements by Type"]]],
+    },
 ]
 
 app_title = "Frappe WMS"

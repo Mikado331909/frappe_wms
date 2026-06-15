@@ -1,0 +1,19 @@
+[
+ {
+  "based_on": "posting_date",
+  "chart_name": "Warehouse Movements by Type",
+  "chart_type": "Group By",
+  "doctype": "Dashboard Chart",
+  "document_type": "Batch Location Movement",
+  "group_by_based_on": "movement_type",
+  "group_by_type": "Count",
+  "is_public": 1,
+  "is_standard": 1,
+  "module": "WMS",
+  "name": "Warehouse Movements by Type",
+  "time_interval": "Daily",
+  "timeseries": 0,
+  "timespan": "Last Month",
+  "type": "Bar"
+ }
+]

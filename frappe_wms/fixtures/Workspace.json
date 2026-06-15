@@ -1,6 +1,12 @@
 [
  {
-  "content": "[{\"id\":\"wms_sc1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Location Pick\",\"col\":3}},{\"id\":\"wms_sc2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Batch Location Stock\",\"col\":3}},{\"id\":\"wms_sc3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Storage Location\",\"col\":3}},{\"id\":\"wms_card1\",\"type\":\"card\",\"data\":{\"card_name\":\"Transactions\",\"col\":4}},{\"id\":\"wms_card2\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"wms_card3\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+  "charts": [
+   {
+    "chart_name": "Warehouse Movements by Type",
+    "label": "Warehouse Movements by Type"
+   }
+  ],
+  "content": "[{\"id\":\"wms_sc1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Location Pick\",\"col\":3}},{\"id\":\"wms_sc2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Batch Location Stock\",\"col\":3}},{\"id\":\"wms_sc3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Storage Location\",\"col\":3}},{\"id\":\"wms_sc4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"WMS Cycle Count\",\"col\":3}},{\"id\":\"wms_header_status\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Operational Status</b></span>\",\"col\":12}},{\"id\":\"wms_nc1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending QC Checks\",\"col\":4}},{\"id\":\"wms_nc2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Cross-dock Pending\",\"col\":4}},{\"id\":\"wms_nc3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Storage Locations\",\"col\":4}},{\"id\":\"wms_chart1\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Warehouse Movements by Type\",\"col\":12}},{\"id\":\"wms_header_ops\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Operations</b></span>\",\"col\":12}},{\"id\":\"wms_card1\",\"type\":\"card\",\"data\":{\"card_name\":\"Operations\",\"col\":4}},{\"id\":\"wms_card2\",\"type\":\"card\",\"data\":{\"card_name\":\"Stock & Locations\",\"col\":4}},{\"id\":\"wms_card3\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"wms_card4\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
   "doctype": "Workspace",
   "extends": null,
   "extends_another_page": 0,
@@ -18,18 +24,40 @@
     "link_to": "Location Pick",
     "link_type": "DocType",
     "onboard": 1,
-    "parent_label": "Transactions",
+    "parent_label": "Operations",
     "type": "Link"
    },
    {
     "hidden": 0,
     "is_query_report": 0,
-    "label": "Batch Location Stock",
+    "label": "WMS QC Check",
     "link_count": 0,
-    "link_to": "Batch Location Stock",
+    "link_to": "WMS QC Check",
+    "link_type": "DocType",
+    "onboard": 0,
+    "parent_label": "Operations",
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "WMS Cross Dock",
+    "link_count": 0,
+    "link_to": "WMS Cross Dock",
+    "link_type": "DocType",
+    "onboard": 0,
+    "parent_label": "Operations",
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "WMS Cycle Count",
+    "link_count": 0,
+    "link_to": "WMS Cycle Count",
     "link_type": "DocType",
     "onboard": 1,
-    "parent_label": "Transactions",
+    "parent_label": "Operations",
     "type": "Link"
    },
    {
@@ -40,7 +68,18 @@
     "link_to": "Batch Location Movement",
     "link_type": "DocType",
     "onboard": 0,
-    "parent_label": "Transactions",
+    "parent_label": "Operations",
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "Batch Location Stock",
+    "link_count": 0,
+    "link_to": "Batch Location Stock",
+    "link_type": "DocType",
+    "onboard": 1,
+    "parent_label": "Stock & Locations",
     "type": "Link"
    },
    {
@@ -51,6 +90,28 @@
     "link_to": "Storage Location",
     "link_type": "DocType",
     "onboard": 1,
+    "parent_label": "Stock & Locations",
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "WMS Zone",
+    "link_count": 0,
+    "link_to": "WMS Zone",
+    "link_type": "DocType",
+    "onboard": 0,
+    "parent_label": "Stock & Locations",
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 0,
+    "label": "WMS Putaway Rule",
+    "link_count": 0,
+    "link_to": "WMS Putaway Rule",
+    "link_type": "DocType",
+    "onboard": 0,
     "parent_label": "Setup",
     "type": "Link"
    },
@@ -86,10 +147,68 @@
     "onboard": 0,
     "parent_label": "Reports",
     "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 1,
+    "label": "Zone Occupancy",
+    "link_count": 0,
+    "link_to": "Zone Occupancy",
+    "link_type": "Report",
+    "onboard": 0,
+    "parent_label": "Reports",
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 1,
+    "label": "Customer Stock Overview",
+    "link_count": 0,
+    "link_to": "Customer Stock Overview",
+    "link_type": "Report",
+    "onboard": 0,
+    "parent_label": "Reports",
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 1,
+    "label": "Pick Performance",
+    "link_count": 0,
+    "link_to": "Pick Performance",
+    "link_type": "Report",
+    "onboard": 0,
+    "parent_label": "Reports",
+    "type": "Link"
+   },
+   {
+    "hidden": 0,
+    "is_query_report": 1,
+    "label": "Inbound Outbound Volume",
+    "link_count": 0,
+    "link_to": "Inbound Outbound Volume",
+    "link_type": "Report",
+    "onboard": 0,
+    "parent_label": "Reports",
+    "type": "Link"
    }
   ],
   "module": "WMS",
   "name": "WMS",
+  "number_cards": [
+   {
+    "label": "Pending QC Checks",
+    "number_card_name": "Pending QC Checks"
+   },
+   {
+    "label": "Cross-dock Pending",
+    "number_card_name": "Cross-dock Pending"
+   },
+   {
+    "label": "Active Storage Locations",
+    "number_card_name": "Active Storage Locations"
+   }
+  ],
   "public": 1,
   "roles": [],
   "sequence_id": 7.1,
@@ -112,6 +231,14 @@
     "color": "Grey",
     "label": "Storage Location",
     "link_to": "Storage Location",
+    "type": "DocType"
+   },
+   {
+    "color": "Yellow",
+    "format": "{} Open",
+    "label": "WMS Cycle Count",
+    "link_to": "WMS Cycle Count",
+    "stats_filter": "{\"status\": [\"in\", [\"Draft\", \"In Progress\"]]}",
     "type": "DocType"
    }
   ],

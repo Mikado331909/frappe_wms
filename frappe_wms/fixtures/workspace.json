@@ -242,6 +242,7 @@
     "type": "DocType"
    }
   ],
-  "title": "WMS"
+  "title": "WMS",
+  "type": "Workspace"
  }
 ]

@@ -4,7 +4,7 @@ from frappe.model.document import Document
 from frappe.utils import flt, today
 
 
-class WmsCrossDock(Document):
+class WMSCrossDock(Document):
     def before_insert(self):
         if not self.posting_date:
             self.posting_date = today()

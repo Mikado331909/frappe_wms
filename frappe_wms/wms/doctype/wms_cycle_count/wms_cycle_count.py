@@ -4,7 +4,7 @@ from frappe.model.document import Document
 from frappe.utils import flt, today
 
 
-class WmsCycleCount(Document):
+class WMSCycleCount(Document):
     def before_insert(self):
         if not self.count_date:
             self.count_date = today()

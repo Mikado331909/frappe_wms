@@ -3,7 +3,7 @@ from frappe import _
 from frappe.model.document import Document
 
 
-class WmsZone(Document):
+class WMSZone(Document):
     def validate(self):
         self._validate_dedicated_customer_on_storage_zone()
 

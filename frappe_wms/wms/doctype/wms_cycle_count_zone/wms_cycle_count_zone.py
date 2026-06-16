@@ -1,5 +1,5 @@
 from frappe.model.document import Document
 
 
-class WmsCycleCountZone(Document):
+class WMSCycleCountZone(Document):
 	pass

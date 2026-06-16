@@ -4,7 +4,7 @@ from frappe.model.document import Document
 from frappe.utils import flt, today
 
 
-class WmsQcCheck(Document):
+class WMSQCCheck(Document):
     def before_insert(self):
         if not self.check_date:
             self.check_date = today()

@@ -7,6 +7,7 @@
   "document_type": "Batch Location Movement",
   "group_by_based_on": "movement_type",
   "group_by_type": "Count",
+  "filters_json": "[]",
   "is_public": 1,
   "is_standard": 0,
   "module": "WMS",

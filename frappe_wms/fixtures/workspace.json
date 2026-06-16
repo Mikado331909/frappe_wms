@@ -14,7 +14,7 @@
   "hide_custom": 0,
   "icon": "package",
   "is_hidden": 0,
-  "label": "WMS",
+  "label": "wms",
   "links": [
    {
     "hidden": 0,
@@ -194,7 +194,7 @@
    }
   ],
   "module": "WMS",
-  "name": "WMS",
+  "name": "wms",
   "number_cards": [
    {
     "label": "Pending QC Checks",

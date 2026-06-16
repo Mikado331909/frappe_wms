@@ -1,7 +1,7 @@
 app_name = "frappe_wms"
 
 fixtures = [
-    {"doctype": "Workspace", "filters": [["name", "in", ["WMS"]]]},
+    {"doctype": "Workspace", "filters": [["name", "in", ["wms"]]]},
     {
         "doctype": "Custom Field",
         "filters": [[

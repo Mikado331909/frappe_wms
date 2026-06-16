@@ -7,3 +7,4 @@ frappe_wms.patches.v1_0.create_purchase_receipt_custom_fields
 frappe_wms.patches.v1_0.add_customer_to_location_stock_and_movement
 frappe_wms.patches.v1_0.phase1_foundation
 frappe_wms.patches.v1_0.phase2_7_schema
+frappe_wms.patches.v1_0.rename_wms_workspace

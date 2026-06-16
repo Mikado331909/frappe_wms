@@ -8,7 +8,7 @@
   "group_by_based_on": "movement_type",
   "group_by_type": "Count",
   "is_public": 1,
-  "is_standard": 1,
+  "is_standard": 0,
   "module": "WMS",
   "name": "Warehouse Movements by Type",
   "time_interval": "Daily",

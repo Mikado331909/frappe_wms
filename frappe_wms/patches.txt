@@ -12,3 +12,4 @@ frappe_wms.patches.v1_0.fix_wms_workspace_visibility
 frappe_wms.patches.v1_0.remove_user_specific_wms_workspaces
 frappe_wms.patches.v1_0.clean_legacy_wms_desktop_links
 frappe_wms.patches.v1_0.force_clean_legacy_wms_link_to_values
+frappe_wms.patches.v1_1.normalize_wms_v16_app_routing

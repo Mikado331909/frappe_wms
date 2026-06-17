@@ -1,4 +1,21 @@
 app_name = "frappe_wms"
+app_title = "Frappe WMS"
+app_publisher = "Frappe WMS"
+app_description = "Lightweight WMS location layer for ERPNext"
+app_email = "admin@example.com"
+app_license = "MIT"
+app_version = "0.2.0"
+app_logo_url = "/assets/frappe_wms/images/frappe-wms-logo.svg"
+app_home = "/desk/wms"
+
+add_to_apps_screen = [
+    {
+        "name": app_name,
+        "logo": app_logo_url,
+        "title": app_title,
+        "route": app_home,
+    }
+]
 
 fixtures = [
     {
@@ -25,14 +42,11 @@ fixtures = [
         "doctype": "Dashboard Chart",
         "filters": [["name", "in", ["Warehouse Movements by Type"]]],
     },
+    {
+        "doctype": "Dashboard",
+        "filters": [["name", "=", "WMS"]],
+    },
 ]
-
-app_title = "Frappe WMS"
-app_publisher = "Frappe WMS"
-app_description = "Lightweight WMS location layer for ERPNext"
-app_email = "admin@example.com"
-app_license = "MIT"
-app_version = "0.2.0"
 
 # ------------------------------------------------------------
 # DocType events (ERPNext core documents)

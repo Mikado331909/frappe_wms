@@ -1,0 +1,28 @@
+[
+ {
+  "cards": [
+   {
+    "card": "Pending QC Checks"
+   },
+   {
+    "card": "Cross-dock Pending"
+   },
+   {
+    "card": "Active Storage Locations"
+   }
+  ],
+  "chart_options": "{}",
+  "charts": [
+   {
+    "chart": "Warehouse Movements by Type",
+    "width": "Full"
+   }
+  ],
+  "dashboard_name": "WMS",
+  "doctype": "Dashboard",
+  "is_default": 0,
+  "is_standard": 0,
+  "module": "WMS",
+  "name": "WMS"
+ }
+]

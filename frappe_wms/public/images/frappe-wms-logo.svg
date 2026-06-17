@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Frappe WMS">
+  <rect width="128" height="128" rx="28" fill="#6b7280"/>
+  <path d="M36 42h56v44H36z" fill="#ffffff" opacity=".16"/>
+  <path d="M42 48h44v32H42z" fill="none" stroke="#ffffff" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M42 58h44M56 48v32" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+  <path d="M35 92h58" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+  <path d="M36 42l28-16 28 16" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

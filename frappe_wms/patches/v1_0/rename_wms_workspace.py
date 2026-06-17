@@ -3,12 +3,13 @@ import frappe
 
 def execute():
     """
-    Rename workspace 'WMS' → 'wms' so Frappe routes the desk tile to /desk/wms.
-    Frappe uses the workspace name as-is in the URL; uppercase 'WMS' resolves to
-    /desk/WMS which triggers a 'Page WMS not found' error before the workspace
-    can be rendered. The fixture now syncs the record under the lowercase name.
+    Keep the WMS workspace record name aligned with standard ERPNext modules.
+
+    ERPNext workspaces such as Stock use a lowercase export path, but the
+    Workspace document name remains title-cased. Older WMS builds briefly used
+    the lowercase document name "wms"; move that back to "WMS".
     """
-    if frappe.db.exists("Workspace", "WMS") and not frappe.db.exists("Workspace", "wms"):
-        frappe.rename_doc("Workspace", "WMS", "wms", force=True, ignore_permissions=True)
-    elif frappe.db.exists("Workspace", "WMS"):
-        frappe.delete_doc("Workspace", "WMS", force=True, ignore_missing=True)
+    if frappe.db.exists("Workspace", "wms") and not frappe.db.exists("Workspace", "WMS"):
+        frappe.rename_doc("Workspace", "wms", "WMS", force=True, ignore_permissions=True)
+    elif frappe.db.exists("Workspace", "wms"):
+        frappe.delete_doc("Workspace", "wms", force=True, ignore_missing=True)

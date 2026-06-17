@@ -1,4 +1,5 @@
 {
+ "app": "frappe_wms",
  "charts": [
   {
    "chart_name": "Warehouse Movements by Type",
@@ -193,7 +194,7 @@
   }
  ],
  "module": "WMS",
- "name": "wms",
+ "name": "WMS",
  "number_cards": [
   {
    "label": "Pending QC Checks",
@@ -208,7 +209,9 @@
    "number_card_name": "Active Storage Locations"
   }
  ],
+ "parent_page": "",
  "public": 1,
+ "restrict_to_domain": "",
  "roles": [],
  "sequence_id": 7.1,
  "shortcuts": [

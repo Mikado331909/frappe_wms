@@ -5,13 +5,12 @@ def execute():
     """
     Keep the WMS workspace route and visibility consistent.
 
-    Older installs may have a public Workspace named "WMS" while the exported
-    workspace uses the lowercase route name "wms". Frappe desk routes are
-    case-sensitive enough that this can make the sidebar tile disappear or open
-    the wrong page after migrations.
+    Older installs may have a public Workspace named "wms". ERPNext workspaces
+    such as Stock use a lowercase export path, but the Workspace document name
+    remains title-cased.
     """
-    workspace_name = "wms"
-    legacy_name = "WMS"
+    workspace_name = "WMS"
+    legacy_name = "wms"
 
     if frappe.db.exists("Workspace", legacy_name) and not frappe.db.exists("Workspace", workspace_name):
         frappe.rename_doc("Workspace", legacy_name, workspace_name, force=True, ignore_permissions=True)
@@ -27,6 +26,7 @@ def execute():
             "module": "WMS",
             "label": "WMS",
             "title": "WMS",
+            "app": "frappe_wms",
         })
 
     frappe.db.sql("""

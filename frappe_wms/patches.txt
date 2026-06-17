@@ -10,3 +10,4 @@ frappe_wms.patches.v1_0.phase2_7_schema
 frappe_wms.patches.v1_0.rename_wms_workspace
 frappe_wms.patches.v1_0.fix_wms_workspace_visibility
 frappe_wms.patches.v1_0.remove_user_specific_wms_workspaces
+frappe_wms.patches.v1_0.clean_legacy_wms_desktop_links

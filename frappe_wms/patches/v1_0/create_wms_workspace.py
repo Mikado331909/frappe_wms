@@ -40,7 +40,7 @@ _LINKS = [
 
 def execute():
     _ensure_public_workspace()
-    _add_to_custom_desktops()
+    _remove_user_specific_wms_workspaces()
     frappe.db.commit()
     try:
         frappe.clear_cache()
@@ -91,42 +91,20 @@ def _ensure_public_workspace():
     ws.insert(ignore_permissions=True)
 
 
-def _add_to_custom_desktops():
+def _remove_user_specific_wms_workspaces():
     """
-    For every user who has personalised their Frappe desktop (i.e. has at least
-    one Workspace row with for_user set), add a user-specific WMS entry so it
-    appears on their home screen alongside the other icons.
+    Remove old user-specific WMS workspace rows.
+
+    A public Workspace should be the only WMS entry. User-specific rows can make
+    the desktop tile and breadcrumbs fall back to the first shortcut instead of
+    opening /desk/wms.
     """
-    users = frappe.db.sql_list("""
-        SELECT DISTINCT for_user
+    rows = frappe.db.sql_list("""
+        SELECT name
         FROM `tabWorkspace`
-        WHERE for_user IS NOT NULL AND for_user != ''
+        WHERE label = 'WMS'
+          AND COALESCE(for_user, '') != ''
     """)
 
-    for user in users:
-        # Skip if this user already has a WMS entry on their desktop
-        if frappe.db.exists("Workspace", {"for_user": user, "label": "WMS"}):
-            continue
-
-        # Find the highest sequence_id this user already has
-        max_seq = frappe.db.sql("""
-            SELECT COALESCE(MAX(sequence_id), 100)
-            FROM `tabWorkspace`
-            WHERE for_user = %s
-        """, user)[0][0]
-
-        ws = frappe.new_doc("Workspace")
-        ws.title       = "WMS"
-        ws.label       = "WMS"
-        ws.icon        = "package"
-        ws.module      = "WMS"
-        ws.for_user    = user
-        ws.public      = 0
-        ws.is_hidden   = 0
-        ws.sequence_id = float(max_seq) + 1
-        ws.content     = _CONTENT
-        for sc in _SHORTCUTS:
-            ws.append("shortcuts", sc)
-        for lnk in _LINKS:
-            ws.append("links", lnk)
-        ws.insert(ignore_permissions=True)
+    for name in rows:
+        frappe.delete_doc("Workspace", name, force=True, ignore_permissions=True)

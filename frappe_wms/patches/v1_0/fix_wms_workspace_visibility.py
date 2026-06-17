@@ -30,11 +30,7 @@ def execute():
         })
 
     frappe.db.sql("""
-        UPDATE `tabWorkspace`
-        SET is_hidden = 0,
-            module = 'WMS',
-            label = 'WMS',
-            title = 'WMS'
+        DELETE FROM `tabWorkspace`
         WHERE label = 'WMS'
           AND COALESCE(for_user, '') != ''
     """)

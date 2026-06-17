@@ -13,7 +13,7 @@ def debug_workspace_info():
                sequence_id, `extends`, public, module
         FROM `tabWorkspace`
         WHERE for_user = %(user)s
-           OR name = 'WMS'
+           OR name IN ('wms', 'WMS')
            OR label = 'WMS'
         ORDER BY for_user, sequence_id
     """, {"user": user}, as_dict=True)
@@ -35,7 +35,7 @@ def diagnose_wms_workspace():
                COALESCE(for_user, '__NULL__') AS for_user_val,
                module, sequence_id, restrict_to_domain
         FROM `tabWorkspace`
-        WHERE name = 'WMS'
+        WHERE name IN ('wms', 'WMS')
     """, as_dict=True)
     result["wms_workspace_db"] = wms_ws
 
@@ -71,7 +71,10 @@ def diagnose_wms_workspace():
             pages = sidebar.get("pages", sidebar.get("workspaces", []))
         else:
             pages = sidebar or []
-        wms_in_sidebar = [p for p in pages if (p.get("name") == "WMS" or p.get("label") == "WMS")]
+        wms_in_sidebar = [
+            p for p in pages
+            if (p.get("name") in ("wms", "WMS") or p.get("label") == "WMS")
+        ]
         result["sidebar_pages_count"] = len(pages)
         result["sidebar_page_names"] = [p.get("name") or p.get("label") for p in pages]
         result["wms_in_sidebar"] = wms_in_sidebar
@@ -105,7 +108,7 @@ def fix_wms_workspace():
         SET public    = 1,
             is_hidden = 0,
             for_user  = ''
-        WHERE name = 'WMS'
+        WHERE name IN ('wms', 'WMS')
     """)
     result["update_rows"] = "done"
 
@@ -126,7 +129,10 @@ def fix_wms_workspace():
             pages = sidebar.get("pages", sidebar.get("workspaces", []))
         else:
             pages = sidebar or []
-        wms_found = any(p.get("name") == "WMS" or p.get("label") == "WMS" for p in pages)
+        wms_found = any(
+            p.get("name") in ("wms", "WMS") or p.get("label") == "WMS"
+            for p in pages
+        )
         result["sidebar_page_names"] = [p.get("name") or p.get("label") for p in pages]
         result["wms_now_in_sidebar"] = wms_found
     except Exception as e:
@@ -198,7 +204,7 @@ def reset_my_desktop():
     frappe.db.sql("""
         UPDATE `tabWorkspace`
         SET for_user = '', public = 1, is_hidden = 0
-        WHERE name = 'WMS'
+        WHERE name IN ('wms', 'WMS')
     """)
     results["wms_fixed"] = "Set public=1, is_hidden=0, for_user='' on WMS workspace"
 

@@ -50,8 +50,16 @@ def execute():
 
 def _ensure_public_workspace():
     """Create or update the public WMS workspace."""
-    if frappe.db.exists("Workspace", "WMS"):
-        frappe.db.set_value("Workspace", "WMS", {
+    workspace_name = "wms"
+    legacy_name = "WMS"
+
+    if frappe.db.exists("Workspace", legacy_name) and not frappe.db.exists("Workspace", workspace_name):
+        frappe.rename_doc("Workspace", legacy_name, workspace_name, force=True, ignore_permissions=True)
+    elif frappe.db.exists("Workspace", legacy_name):
+        frappe.delete_doc("Workspace", legacy_name, force=True, ignore_missing=True)
+
+    if frappe.db.exists("Workspace", workspace_name):
+        frappe.db.set_value("Workspace", workspace_name, {
             "public":    1,
             "is_hidden": 0,
             "for_user":  "",
@@ -65,7 +73,7 @@ def _ensure_public_workspace():
 
     ws = frappe.get_doc({
         "doctype":     "Workspace",
-        "name":        "WMS",
+        "name":        workspace_name,
         "label":       "WMS",
         "title":       "WMS",
         "module":      "WMS",

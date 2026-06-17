@@ -5,13 +5,14 @@ For every Item + Batch + Warehouse combination that has Batch Location Stock
 rows, shows:
   - Total location qty  (sum of all storage location rows)
   - ERPNext actual qty  (sum of non-cancelled SLE actual_qty)
-  - Difference          (ERPNext qty − location qty)
+  - Difference          (ERPNext qty - location qty)
 
 A non-zero Difference indicates that location stock is out of sync with
 ERPNext and needs manual investigation or correction.
 """
 
 import frappe
+from frappe import _
 from frappe.utils import flt
 
 
@@ -25,52 +26,52 @@ def execute(filters=None):
 def _columns():
     return [
         {
-            "label": "Item Code",
+            "label": _("Item Code"),
             "fieldname": "item_code",
             "fieldtype": "Link",
             "options": "Item",
             "width": 150,
         },
         {
-            "label": "Item Name",
+            "label": _("Item Name"),
             "fieldname": "item_name",
             "fieldtype": "Data",
             "width": 200,
         },
         {
-            "label": "Batch No",
+            "label": _("Batch No"),
             "fieldname": "batch_no",
             "fieldtype": "Link",
             "options": "Batch",
             "width": 130,
         },
         {
-            "label": "Warehouse",
+            "label": _("Warehouse"),
             "fieldname": "warehouse",
             "fieldtype": "Link",
             "options": "Warehouse",
             "width": 160,
         },
         {
-            "label": "ERPNext Qty",
+            "label": _("ERPNext Qty"),
             "fieldname": "erpnext_qty",
             "fieldtype": "Float",
             "width": 120,
         },
         {
-            "label": "Location Qty",
+            "label": _("Location Qty"),
             "fieldname": "location_qty",
             "fieldtype": "Float",
             "width": 120,
         },
         {
-            "label": "Difference",
+            "label": _("Difference"),
             "fieldname": "difference",
             "fieldtype": "Float",
             "width": 120,
         },
         {
-            "label": "Location Breakdown",
+            "label": _("Location Breakdown"),
             "fieldname": "location_breakdown",
             "fieldtype": "Data",
             "width": 300,

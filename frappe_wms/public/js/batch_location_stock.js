@@ -3,7 +3,7 @@ frappe.ui.form.on('Batch Location Stock', {
 		if (frm.doc.__islocal) return;
 
 		if (frm.doc.qty > 0) {
-			frm.add_custom_button(__('Voorraad Verplaatsen'), function () {
+			frm.add_custom_button(__('Move Stock'), function () {
 				_show_move_stock_dialog(frm);
 			});
 		}
@@ -22,18 +22,18 @@ function _show_move_stock_dialog(frm) {
 		callback(sr) {
 			const suggestion = sr.message;
 			const suggestion_desc = suggestion
-				? __('Aanbevolen: {0} (zone {1}) — {2}', [
+				? __('Recommended: {0} (zone {1}) - {2}', [
 					suggestion.location,
 					suggestion.zone,
 					suggestion.reason,
 				  ])
-				: __('Geen putaway suggestie beschikbaar — kies handmatig een locatie.');
+				: __('No putaway suggestion available - choose a location manually.');
 
 			const d = new frappe.ui.Dialog({
-				title: __('Voorraad Verplaatsen'),
+				title: __('Move Stock'),
 				fields: [
 					{
-						label: __('Naar Locatie'),
+						label: __('To Location'),
 						fieldname: 'to_location',
 						fieldtype: 'Link',
 						options: 'Storage Location',
@@ -50,14 +50,14 @@ function _show_move_stock_dialog(frm) {
 						},
 					},
 					{
-						label: __('Hoeveelheid'),
+						label: __('Quantity'),
 						fieldname: 'qty',
 						fieldtype: 'Float',
 						reqd: 1,
 						default: frm.doc.qty,
 					},
 				],
-				primary_action_label: __('Verplaats'),
+				primary_action_label: __('Move'),
 				primary_action(values) {
 					if (!values.to_location || !values.qty) return;
 
@@ -73,7 +73,7 @@ function _show_move_stock_dialog(frm) {
 
 							if (result.status === 'blocked') {
 								frappe.msgprint({
-									title: __('Niet toegestaan'),
+									title: __('Not Allowed'),
 									message: result.message,
 									indicator: 'red',
 								});
@@ -91,7 +91,7 @@ function _show_move_stock_dialog(frm) {
 
 								frappe.confirm(
 									`${result.message}<br><ul>${items_html}</ul>${cap_html}`
-									+ `<br>${__('Wil je hier ook')} <b>${frm.doc.item_name || frm.doc.item_code}</b> ${__('toevoegen?')}`,
+									+ `<br>${__('Do you also want to add')} <b>${frm.doc.item_name || frm.doc.item_code}</b> ${__('here?')}`,
 									() => _do_move(d, frm, values),
 									() => {}
 								);

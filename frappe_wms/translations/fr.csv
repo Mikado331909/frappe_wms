@@ -1,0 +1,138 @@
+"<b>{0}</b> count lines created.","<b>{0}</b> lignes de comptage créées."
+"{0} location(s) corrected.","{0} emplacement(s) corrigé(s)."
+"{0} units moved to Outbound Staging.","{0} unités déplacées vers la zone de préparation sortante."
+Action,Action
+Active,Actif
+"Active Locations","Emplacements actifs"
+"Add at least one zone before generating count lines.","Ajoutez au moins une zone avant de générer les lignes de comptage."
+"Allocating location stock...","Allocation du stock par emplacement..."
+Approved,Approuvé
+Batch,Lot
+"Batch No","N° de lot"
+Both,Les deux
+"Check Date","Date de contrôle"
+"Check Type","Type de contrôle"
+"Completion %","% d'avancement"
+"Count Date","Date de comptage"
+"Count Lines","Lignes de comptage"
+"Counted By","Compté par"
+"Counted Qty","Quantité comptée"
+"Cross-dock Location","Emplacement cross-dock"
+"Cross-dock Settings","Paramètres cross-dock"
+"Current Stock","Stock actuel"
+Customer,Client
+"Customer Required","Client requis"
+"Customer for whom this line is received. Copied to WMS location stock.","Client pour lequel cette ligne est réceptionnée. Copié vers le stock par emplacement WMS."
+Date,Date
+Delivered,Livré
+Difference,Écart
+Discrepancies,Écarts
+"Do you also want to add","Voulez-vous également ajouter"
+"Do you want to update the Pick List with the WMS values?","Voulez-vous mettre à jour la Pick List avec les valeurs WMS ?"
+"Enter the approved and rejected quantities per line. On submit, approved items are moved to RECV and rejected items to Quarantine.","Saisissez les quantités approuvées et rejetées par ligne. À la validation, les articles approuvés sont déplacés vers RECV et les articles rejetés vers Quarantine."
+"Enter the counted quantities per line. On submit, differences are corrected automatically in WMS stock.","Saisissez les quantités comptées par ligne. À la validation, les écarts sont corrigés automatiquement dans le stock WMS."
+"Existing Location Pick","Location Pick existant"
+"ERPNext Qty","Quantité ERPNext"
+"Fill in the ""Customer (WMS)"" field before enabling cross-dock.","Renseignez le champ ""Customer (WMS)"" avant d'activer le cross-dock."
+Generate,Générer
+"Generate Count Lines","Générer les lignes de comptage"
+"Generate Location Pick","Générer un Location Pick"
+"Generating count lines...","Génération des lignes de comptage..."
+"If checked: the item goes to a Cross-dock Staging location for direct flow-through.","Si coché : l'article va vers un emplacement Cross-dock Staging pour un flux direct."
+"If checked: the item goes to a QC Hold location and a WMS QC Check is created.","Si coché : l'article va vers un emplacement QC Hold et un WMS QC Check est créé."
+"Inbound Settings","Paramètres entrants"
+Inspector,Contrôleur
+"Insufficient stock on {0}: available {1}, requested {2} for Item {3} Batch {4}.","Stock insuffisant sur {0} : disponible {1}, demandé {2} pour l'article {3}, lot {4}."
+Item,Article
+"Item Code","Code article"
+"Item Group","Groupe d'articles"
+"Item Name","Nom de l'article"
+"Linked Sales Order for this cross-dock shipment.","Commande client liée pour cette expédition cross-dock."
+"Location {0} already contains stock for {1}. Choose another location for {2}.","L'emplacement {0} contient déjà du stock pour {1}. Choisissez un autre emplacement pour {2}."
+"Location {0} already contains stock for {1}:","L'emplacement {0} contient déjà du stock pour {1} :"
+"Location {0} has a capacity of {1}. After placement it will contain {2} ({3}%).","L'emplacement {0} a une capacité de {1}. Après placement, il contiendra {2} ({3}%)."
+"Location {0} not found.","Emplacement {0} introuvable."
+Location,Emplacement
+"Location Breakdown","Détail par emplacement"
+"Location Pick","Location Pick"
+"Location Qty","Quantité par emplacement"
+Lines,Lignes
+Move,Déplacer
+"Move Stock","Déplacer le stock"
+"Move all cross-dock items to Outbound Staging?","Déplacer tous les articles cross-dock vers la zone de préparation sortante ?"
+"Movement Count","Nombre de mouvements"
+"Movement Type","Type de mouvement"
+"No Sales Orders","Aucune commande client"
+"No Zones","Aucune zone"
+"No active {0} location found for warehouse {1}.","Aucun emplacement {0} actif trouvé pour l'entrepôt {1}."
+"No active Picking Staging / Outbound Staging location found for warehouse {0}.","Aucun emplacement Picking Staging / Outbound Staging actif trouvé pour l'entrepôt {0}."
+"No open Location Picks found.","Aucun Location Pick ouvert trouvé."
+"No open Sales Orders found for customer {0}.","Aucune commande client ouverte trouvée pour le client {0}."
+"No pickable location stock found for the given Pick Lists.","Aucun stock prélevable par emplacement trouvé pour les Pick Lists indiquées."
+"No putaway suggestion available - choose a location manually.","Aucune suggestion de rangement disponible - choisissez un emplacement manuellement."
+"No stock found on the cross-dock locations.","Aucun stock trouvé sur les emplacements cross-dock."
+"No stock on location {0} for Item {1} Batch {2}.","Aucun stock sur l'emplacement {0} pour l'article {1}, lot {2}."
+"Not Allowed","Non autorisé"
+Notes,Notes
+"Occupied Locations","Emplacements occupés"
+"Occupancy %","% d'occupation"
+Outcome,Résultat
+Partial,Partiel
+"Pick List {0} is already added to this Location Pick.","La Pick List {0} est déjà ajoutée à ce Location Pick."
+"Pick List {0} was added more than once.","La Pick List {0} a été ajoutée plusieurs fois."
+"Pick List not changed","Pick List non modifiée"
+"Pick List picked_qty updated to WMS values","picked_qty de la Pick List mis à jour avec les valeurs WMS"
+"Pick List shows","La Pick List indique"
+"Pick List","Pick List"
+"Pick Lists","Pick Lists"
+"Picked Qty","Quantité prélevée"
+"Picking Strategy","Stratégie de prélèvement"
+Picked,Prélevé
+Picker,Préparateur
+"Posting Date","Date comptable"
+"Putaway Mode","Mode de rangement"
+"Putaway Settings","Paramètres de rangement"
+"QC Check completed. Approved items were moved to RECV, rejected items to Quarantine.","QC Check terminé. Les articles approuvés ont été déplacés vers RECV, les articles rejetés vers Quarantine."
+"QC Lines","Lignes QC"
+"QC Location","Emplacement QC"
+"QC Required","QC requis"
+"QC Settings","Paramètres QC"
+Quantity,Quantité
+"Ready to Ship","Prêt à expédier"
+"Received Qty","Quantité reçue"
+"Recommended: {0} (zone {1}) - {2}","Recommandé : {0} (zone {1}) - {2}"
+Rejected,Rejeté
+Remarks,Remarques
+Required,Requis
+"Required Qty","Quantité requise"
+"Row {0}: Picked quantity cannot be negative.","Ligne {0} : la quantité prélevée ne peut pas être négative."
+"Row {0}: Quantities cannot be negative.","Ligne {0} : les quantités ne peuvent pas être négatives."
+"Sales Order {0} filled automatically.","Commande client {0} renseignée automatiquement."
+Select,Sélectionner
+"Select Sales Order for Cross-dock","Sélectionner une commande client pour le cross-dock"
+"Select an existing Location Pick.","Sélectionnez un Location Pick existant."
+"Source Location","Emplacement source"
+Staged,Préparé
+Start,Démarrer
+Status,Statut
+"System Qty","Quantité système"
+Target,Cible
+"Target Zone","Zone cible"
+"The quantity ({2}) exceeds the capacity. Continue anyway?","La quantité ({2}) dépasse la capacité. Continuer quand même ?"
+"To Location","Vers l'emplacement"
+"Total Capacity","Capacité totale"
+"Total Quantity","Quantité totale"
+UOM,Unité
+Unknown,Inconnu
+"Validate WMS Stock against ERPNext Stock","Valider le stock WMS par rapport au stock ERPNext"
+Warehouse,Entrepôt
+"WMS Cross Dock {0} created.","WMS Cross Dock {0} créé."
+"WMS QC Check {0} created for warehouse {1}.","WMS QC Check {0} créé pour l'entrepôt {1}."
+"WMS has","WMS a"
+Zone,Zone
+"Zone Name","Nom de la zone"
+"Zone Type","Type de zone"
+"Zones to Count","Zones à compter"
+"here?","ici ?"
+"picked of","prélevé sur"
+updated,mis à jour

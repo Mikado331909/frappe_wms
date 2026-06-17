@@ -55,7 +55,7 @@
    "in_standard_filter": 1,
    "label": "Dedicated Customer",
    "options": "Customer",
-   "description": "Als ingevuld, is deze zone exclusief voor deze klant. Alle opslaglocaties in deze zone erven deze klantbeperking."
+   "description": "If filled, this zone is exclusive to this customer. All storage locations in this zone inherit this customer restriction."
   },
   {
    "fieldname": "is_active",

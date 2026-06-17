@@ -1,7 +1,8 @@
 """
-Inbound / Outbound Volume rapport — bewegingsvolume per dag per bewegingstype.
+Inbound / Outbound Volume report - movement volume per day and movement type.
 """
 import frappe
+from frappe import _
 from frappe.utils import flt
 
 
@@ -12,12 +13,12 @@ def execute(filters=None):
 
 def _columns():
     return [
-        {"label": "Datum", "fieldname": "posting_date", "fieldtype": "Date", "width": 100},
-        {"label": "Warehouse", "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 140},
-        {"label": "Bewegingstype", "fieldname": "movement_type", "fieldtype": "Data", "width": 140},
-        {"label": "Klant", "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 130},
-        {"label": "Aantal Bewegingen", "fieldname": "movement_count", "fieldtype": "Int", "width": 120},
-        {"label": "Totaal Hoeveelheid", "fieldname": "total_qty", "fieldtype": "Float", "width": 120},
+        {"label": _("Date"), "fieldname": "posting_date", "fieldtype": "Date", "width": 100},
+        {"label": _("Warehouse"), "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 140},
+        {"label": _("Movement Type"), "fieldname": "movement_type", "fieldtype": "Data", "width": 140},
+        {"label": _("Customer"), "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 130},
+        {"label": _("Movement Count"), "fieldname": "movement_count", "fieldtype": "Int", "width": 120},
+        {"label": _("Total Quantity"), "fieldname": "total_qty", "fieldtype": "Float", "width": 120},
     ]
 
 
@@ -44,7 +45,7 @@ def _get_data(filters):
         SELECT
             blm.posting_date,
             blm.warehouse,
-            COALESCE(blm.movement_type, 'Onbekend') AS movement_type,
+            COALESCE(blm.movement_type, 'Unknown') AS movement_type,
             blm.customer,
             COUNT(*) AS movement_count,
             SUM(blm.qty) AS total_qty

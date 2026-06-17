@@ -21,7 +21,7 @@
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Artikel",
+   "label": "Item",
    "options": "Item",
    "read_only": 1,
    "reqd": 1
@@ -30,7 +30,7 @@
    "fieldname": "item_name",
    "fieldtype": "Data",
    "fetch_from": "item_code.item_name",
-   "label": "Artikelnaam",
+   "label": "Item Name",
    "read_only": 1
   },
   {
@@ -54,7 +54,7 @@
    "fieldname": "xdock_location",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Cross-dock Locatie",
+   "label": "Cross-dock Location",
    "options": "Storage Location",
    "read_only": 1
   },
@@ -69,28 +69,28 @@
    "fieldname": "qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Hoeveelheid",
+   "label": "Quantity",
    "read_only": 1,
    "reqd": 1
   },
   {
    "fieldname": "staged_qty",
    "fieldtype": "Float",
-   "label": "Gestaged",
+   "label": "Staged",
    "read_only": 1,
    "default": "0"
   },
   {
    "fieldname": "delivered_qty",
    "fieldtype": "Float",
-   "label": "Geleverd",
+   "label": "Delivered",
    "read_only": 1,
    "default": "0"
   },
   {
    "fieldname": "uom",
    "fieldtype": "Link",
-   "label": "Eenheid",
+   "label": "UOM",
    "options": "UOM",
    "read_only": 1
   }

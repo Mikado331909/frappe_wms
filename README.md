@@ -1,119 +1,127 @@
 # Frappe WMS
 
-Frappe WMS is een Warehouse Management System laag voor ERPNext. De app voegt fysieke locatievoorraad, putaway, picking, kwaliteitscontrole, cross-dock, cycle counting en WMS rapportage toe bovenop de standaard ERPNext voorraadadministratie.
+Frappe WMS is a Warehouse Management System layer for ERPNext. It adds physical location control, putaway, picking, quality checks, cross-docking, cycle counting, WMS dashboards and operational reports on top of ERPNext's standard stock ledger.
 
-De basisgedachte is eenvoudig:
+The app is built around one simple split:
 
-- ERPNext blijft leidend voor voorraadboekingen, waardering, batches, inkoop, verkoop, productie en de stock ledger.
-- Frappe WMS houdt bij waar voorraad fysiek ligt binnen een warehouse: zone, locatie, batch, klant en hoeveelheid.
-- Elke WMS voorraadmutatie schrijft een auditregel in `Batch Location Movement`.
-- De app is bedoeld voor batch-gestuurde voorraad. Serienummers worden niet als hoofdproces beheerd door deze app.
+- ERPNext remains the source of truth for stock ledger entries, valuation, batches, purchasing, sales, manufacturing and accounting.
+- Frappe WMS tracks where stock is physically located inside a warehouse: zone, storage location, batch, customer and quantity.
+- Every WMS stock movement creates a `Batch Location Movement` audit record.
+- The app is intended for batch-tracked inventory. It reads ERPNext v16 Serial and Batch Bundles, but it does not provide a full serial-number location workflow.
 
-De app richt zich op ERPNext/Frappe versie 16 en bevat compatibiliteit voor batchinformatie via Serial and Batch Bundle.
+The app targets ERPNext/Frappe version 16 and keeps compatibility with older direct `batch_no` transaction rows where possible.
 
 ---
 
-## Inhoud
+## Contents
 
-1. [Wat deze app oplost](#wat-deze-app-oplost)
-2. [Belangrijke uitgangspunten](#belangrijke-uitgangspunten)
-3. [Module en workspace](#module-en-workspace)
-4. [Architectuur](#architectuur)
-5. [Datamodel](#datamodel)
-6. [ERPNext integraties](#erpnext-integraties)
+1. [What This App Solves](#what-this-app-solves)
+2. [Core Principles](#core-principles)
+3. [Module And Workspace](#module-and-workspace)
+4. [Architecture](#architecture)
+5. [Data Model](#data-model)
+6. [ERPNext Integrations](#erpnext-integrations)
 7. [Workflows](#workflows)
-8. [Picking strategieen](#picking-strategieen)
-9. [Klantsegregatie](#klantsegregatie)
-10. [Configuratie](#configuratie)
-11. [Voorbeeldinrichting](#voorbeeldinrichting)
-12. [Dashboards en rapporten](#dashboards-en-rapporten)
-13. [Installatie](#installatie)
-14. [Upgrade en migratie](#upgrade-en-migratie)
-15. [Validatie en testen](#validatie-en-testen)
-16. [Beperkingen en aandachtspunten](#beperkingen-en-aandachtspunten)
-17. [Technische bestandsstructuur](#technische-bestandsstructuur)
-18. [Licentie](#licentie)
+8. [Picking Strategies](#picking-strategies)
+9. [Customer Segregation](#customer-segregation)
+10. [Configuration](#configuration)
+11. [Example Setup](#example-setup)
+12. [Dashboards And Reports](#dashboards-and-reports)
+13. [Installation](#installation)
+14. [Upgrade And Migration](#upgrade-and-migration)
+15. [Validation And Testing](#validation-and-testing)
+16. [Translations](#translations)
+17. [Limitations And Notes](#limitations-and-notes)
+18. [Technical Structure](#technical-structure)
+19. [Developer Notes](#developer-notes)
+20. [License](#license)
 
 ---
 
-## Wat deze app oplost
+## What This App Solves
 
-ERPNext weet hoeveel voorraad er in een warehouse ligt. In veel magazijnen is dat niet genoeg. Medewerkers moeten ook weten:
+ERPNext knows how much stock exists in a warehouse. Warehouse teams often also need to know:
 
-- in welke zone een batch ligt;
-- op welke fysieke locatie een batch ligt;
-- welke klant eigenaar is van een batch;
-- of goederen nog in ontvangst, QC, cross-dock, productie staging of outbound staging staan;
-- welke voorraad al fysiek gepickt is;
-- welke verschillen uit een telling zijn gekomen;
-- of de WMS locatievoorraad nog aansluit op de ERPNext stock ledger.
+- which zone a batch is in;
+- which physical storage location contains a batch;
+- which customer owns or controls a batch;
+- whether goods are in receiving, QC, cross-dock, inspection, production staging or outbound staging;
+- which stock has already been physically picked;
+- what differences were found during a cycle count;
+- whether WMS location totals still match ERPNext stock ledger quantities.
 
-Frappe WMS vult die operationele laag in.
+Frappe WMS provides this operational layer without replacing ERPNext inventory accounting.
 
-### Kernfuncties
+### Main Capabilities
 
-- WMS workspace met operationele shortcuts, KPI cards en dashboard chart.
-- Zones per warehouse, zoals Receiving, Active Storage, QC Hold, Production Staging en Outbound Staging.
-- Storage Locations als fysieke locaties binnen zones.
-- Batch Location Stock voor exacte voorraad per item, batch, warehouse en locatie.
-- Batch Location Movement als auditlog voor iedere fysieke beweging.
-- Automatische verwerking van Purchase Receipt, Delivery Note en Stock Entry events.
-- QC flow met WMS QC Check.
-- Cross-dock flow met WMS Cross Dock.
-- Location Pick flow vanuit ERPNext Pick List.
-- Putaway suggesties op basis van WMS Putaway Rules.
-- Klantsegregatie op opslaglocaties.
-- Cycle counting op basis van zones.
-- Rapporten voor bezetting, klantvoorraad, pick performance, volume en reconciliatie.
+- WMS workspace with shortcuts, KPI cards and a dashboard chart.
+- Warehouse zones such as Receiving, Active Storage, QC Hold, Production Staging and Outbound Staging.
+- Physical Storage Locations within zones.
+- Batch Location Stock per item, batch, warehouse, location and customer.
+- Batch Location Movement as the audit trail for every physical movement.
+- Automatic handling of Purchase Receipt, Delivery Note and Stock Entry events.
+- QC flow with WMS QC Check.
+- Cross-dock flow with WMS Cross Dock.
+- Location Pick flow generated from ERPNext Pick List.
+- Putaway suggestions based on WMS Putaway Rules.
+- Customer segregation on storage locations.
+- Cycle counting by warehouse zone.
+- Reports for occupancy, customer stock, pick performance, movement volume and reconciliation.
 
-### Wat de app niet probeert te vervangen
+### What The App Does Not Replace
 
-- ERPNext Stock Ledger Entry blijft de bron voor financiele en administratieve voorraad.
-- ERPNext Warehouse blijft het administratieve warehouse.
-- ERPNext Item, Batch, Purchase Receipt, Pick List, Delivery Note en Stock Entry blijven de standaard documenten.
-- De app doet geen volledige serial number workflow.
-- De app maakt geen waarderingsboekingen buiten ERPNext om.
-
----
-
-## Belangrijke uitgangspunten
-
-### ERPNext is leidend voor voorraad
-
-Frappe WMS beheert locaties. ERPNext beheert de stock ledger. WMS mag niet stilletjes ERPNext corrigeren. Als WMS en ERPNext verschillen, moet dat zichtbaar worden in het reconciliatie rapport.
-
-### Locatievoorraad wordt niet verwijderd
-
-`Batch Location Stock` records blijven bestaan, ook als de hoeveelheid nul wordt. Dit is bewust. Het geeft historie en voorkomt dat auditinformatie verdwijnt.
-
-### Elke beweging krijgt een auditregel
-
-Voorraad toevoegen, aftrekken of verplaatsen verloopt via gedeelde helpers in `events/utils.py`. Die helpers schrijven altijd een `Batch Location Movement` record.
-
-### Alleen batch-gestuurde voorraad
-
-De kern van deze app werkt met `item_code + batch_no + warehouse + storage_location`. Artikelen die met WMS worden beheerd moeten daarom batch tracking gebruiken in ERPNext.
-
-### Selectieve activatie per warehouse
-
-Een warehouse doet alleen mee in WMS als er actieve Storage Locations voor dat warehouse zijn ingericht. Daardoor kan de app gefaseerd worden gebruikt.
+- ERPNext Stock Ledger Entry remains the source of truth for financial and administrative stock.
+- ERPNext Warehouse remains the administrative warehouse level.
+- ERPNext Item, Batch, Purchase Receipt, Pick List, Delivery Note and Stock Entry remain standard documents.
+- The app does not implement a full serial-number WMS.
+- The app does not create stock valuation postings outside ERPNext.
 
 ---
 
-## Module en workspace
+## Core Principles
 
-De app registreert een module `WMS`.
+### ERPNext Owns Quantity And Value
 
-Belangrijke app metadata:
+Frappe WMS owns physical location detail. ERPNext owns the stock ledger. WMS should not silently correct ERPNext. Any mismatch should be visible in the Location Stock Reconciliation report.
 
-- App name: `frappe_wms`
-- Module: `WMS`
-- Workspace route: `/desk/wms`
-- App home: `/desk/wms`
-- Workspace document: `WMS`
-- Workspace export: `frappe_wms/wms/workspace/wms/wms.json`
+### Location Stock Is Not Deleted
 
-De app bevat ook een Dashboard record `WMS`, zodat WMS zichtbaar is in Build > Dashboard. De Dashboard fixture koppelt dezelfde KPI cards en chart als de workspace:
+`Batch Location Stock` records are kept even when quantity becomes zero. This preserves history and avoids losing the operational trail.
+
+### Every Movement Is Audited
+
+Adding, deducting or moving WMS stock should go through shared helpers in `events/utils.py`. Those helpers always create a `Batch Location Movement` row.
+
+### Batch Tracking Is Required
+
+The core WMS key is:
+
+```text
+item_code + batch_no + warehouse + storage_location
+```
+
+Items managed by WMS should therefore use batch tracking in ERPNext.
+
+### Warehouses Can Be Activated Gradually
+
+A warehouse participates in WMS when active Storage Locations are configured for it. Warehouses without WMS locations are skipped by event handlers where possible, which allows phased rollout.
+
+---
+
+## Module And Workspace
+
+The app registers a `WMS` module.
+
+| Item | Value |
+|---|---|
+| App name | `frappe_wms` |
+| Module | `WMS` |
+| App home | `/desk/wms` |
+| Workspace route | `/desk/wms` |
+| Workspace document | `WMS` |
+| Workspace export | `frappe_wms/wms/workspace/wms/wms.json` |
+
+The app also ships a Dashboard record named `WMS`, so it appears under Build > Dashboard. The dashboard uses the same operational cards and chart as the workspace:
 
 - Pending QC Checks
 - Cross-dock Pending
@@ -122,77 +130,75 @@ De app bevat ook een Dashboard record `WMS`, zodat WMS zichtbaar is in Build > D
 
 ---
 
-## Architectuur
+## Architecture
 
-Frappe WMS hangt als event-driven laag aan ERPNext documenten.
+Frappe WMS is event-driven. It reacts to standard ERPNext documents instead of replacing them.
 
 ```text
 ERPNext Purchase Receipt
   -> on_submit
-     -> normale ontvangst naar Receiving
-     -> QC ontvangst naar QC Hold + WMS QC Check
-     -> cross-dock ontvangst naar Cross-dock Staging + WMS Cross Dock
+     -> standard receipt to Receiving
+     -> QC receipt to QC Hold + WMS QC Check
+     -> cross-dock receipt to Cross-dock Staging + WMS Cross Dock
 
 ERPNext Pick List
-  -> knop in formulier
+  -> form button
      -> Generate Location Pick
-     -> WMS zoekt Batch Location Stock op opslaglocaties
-     -> WMS maakt Location Pick regels
+     -> WMS reads Batch Location Stock on storage locations
+     -> WMS creates Location Pick lines
 
 Location Pick
   -> submit
-     -> verplaatst voorraad van opslaglocatie naar Outbound/Picking Staging
+     -> move picked quantity from storage to Outbound/Picking Staging
 
 ERPNext Delivery Note
   -> on_submit
-     -> trekt voorraad af uit Outbound/Picking Staging
+     -> deduct stock from Outbound/Picking Staging
 
 ERPNext Stock Entry
   -> on_submit
-     -> bronkant trekt af uit staging
-     -> doelkant gaat naar Receiving of Inspection
+     -> source side deducts from staging
+     -> target side receives into Receiving or Inspection
 
 WMS Cycle Count
-  -> genereert telregels uit Batch Location Stock
-  -> submit corrigeert locatievoorraad en schrijft movement audit
+  -> generate count lines from Batch Location Stock
+  -> submit applies WMS location corrections and writes audit movements
 ```
 
-### Gedeelde voorraadhelpers
+### Shared Stock Helpers
 
-De gedeelde helpers staan in `frappe_wms/wms/events/utils.py`.
+Shared helpers live in `frappe_wms/wms/events/utils.py`.
 
-| Helper | Doel |
+| Helper | Purpose |
 |---|---|
-| `iter_batch_entries` | Leest batches uit ERPNext v16 Serial and Batch Bundle of oudere batchvelden. |
-| `get_receiving_location` | Vindt actieve Receiving locatie voor een warehouse. |
-| `get_picking_staging_location` | Vindt Picking Staging of Outbound Staging locatie. |
-| `get_qc_hold_location` | Vindt QC Hold locatie. |
-| `get_cross_dock_location` | Vindt Cross-dock Staging locatie. |
-| `get_quarantine_location` | Vindt Quarantine locatie. |
-| `get_production_staging_location` | Vindt Production Staging locatie. |
-| `evaluate_putaway_rule` | Bepaalt beste zone en locatie op basis van WMS Putaway Rule. |
-| `add_location_qty` | Verhoogt of maakt Batch Location Stock en schrijft movement. |
-| `deduct_location_qty` | Verlaagt Batch Location Stock en schrijft movement. |
-| `move_location_qty` | Verplaatst voorraad tussen twee locaties en schrijft movement. |
+| `iter_batch_entries` | Reads batches from ERPNext v16 Serial and Batch Bundle or older direct batch fields. |
+| `get_receiving_location` | Finds an active Receiving location for a warehouse. |
+| `get_picking_staging_location` | Finds a Picking Staging or Outbound Staging location. |
+| `get_qc_hold_location` | Finds a QC Hold location. |
+| `get_cross_dock_location` | Finds a Cross-dock Staging location. |
+| `get_quarantine_location` | Finds a Quarantine location. |
+| `get_production_staging_location` | Finds a Production Staging location. |
+| `evaluate_putaway_rule` | Determines the best zone and location from WMS Putaway Rules. |
+| `add_location_qty` | Creates or increases Batch Location Stock and writes a movement. |
+| `deduct_location_qty` | Decreases Batch Location Stock and writes a movement. |
+| `move_location_qty` | Moves stock between two locations and writes a movement. |
 
 ---
 
-## Datamodel
+## Data Model
 
 ### WMS Zone
 
-Een WMS Zone groepeert fysieke locaties binnen een ERPNext warehouse.
+A WMS Zone groups physical locations inside an ERPNext warehouse.
 
-Belangrijke velden:
-
-| Veld | Type | Doel |
+| Field | Type | Purpose |
 |---|---|---|
-| `zone_code` | Data | Unieke zonecode. |
-| `zone_name` | Data | Leesbare naam. |
+| `zone_code` | Data | Unique zone code. |
+| `zone_name` | Data | Human-readable zone name. |
 | `warehouse` | Link | ERPNext Warehouse. |
-| `zone_type` | Select | Functionele zone. |
-| `dedicated_customer` | Link | Optionele klant voor gereserveerde zone. |
-| `is_active` | Check | Actief of niet. |
+| `zone_type` | Select | Operational zone type. |
+| `dedicated_customer` | Link | Optional customer reserved for the zone. |
+| `is_active` | Check | Enables or disables the zone. |
 
 Zone types:
 
@@ -205,105 +211,74 @@ Zone types:
 - Inspection
 - Quarantine
 
-Voorbeeld:
+Example:
 
 ```text
 zone_code: ZONE-A
-zone_name: Opslagzone A
+zone_name: Storage Zone A
 warehouse: WH-01
 zone_type: Active Storage
-dedicated_customer: Klant A
+dedicated_customer: Customer A
 is_active: 1
 ```
 
 ### Storage Location
 
-Een Storage Location is een fysieke plek in een zone, zoals een vak, stelling, palletplaats of staginglocatie.
+A Storage Location is a physical bin, shelf, rack position, pallet position or staging area.
 
-Belangrijke velden:
-
-| Veld | Type | Doel |
+| Field | Type | Purpose |
 |---|---|---|
-| `location_code` | Data | Locatiecode. |
-| `location_name` | Data | Leesbare naam. |
+| `location_code` | Data | Location code. |
+| `location_name` | Data | Human-readable location name. |
 | `warehouse` | Link | ERPNext Warehouse. |
 | `zone` | Link | WMS Zone. |
-| `location_type` | Select | Functie van de locatie. |
-| `pick_sequence` | Int | Sorteervolgorde voor pickroute. |
-| `max_qty` | Float | Capaciteit; nul betekent geen vaste limiet. |
-| `is_active` | Check | Actief of niet. |
-
-Location types:
-
-- Storage
-- Receiving
-- Picking Staging
-- Active Storage
-- QC Hold
-- Production Staging
-- Outbound Staging
-- Cross-dock Staging
-- Inspection
-- Quarantine
-
-Voorbeeld:
-
-```text
-location_code: A-01-01
-warehouse: WH-01
-zone: ZONE-A
-location_type: Active Storage
-pick_sequence: 10
-max_qty: 500
-is_active: 1
-```
+| `location_type` | Select | Operational use of the location. |
+| `pick_sequence` | Int | Route order for picking. |
+| `max_qty` | Float | Capacity; zero means no fixed limit. |
+| `is_active` | Check | Enables or disables the location. |
 
 ### Batch Location Stock
 
-Dit is de kern van WMS locatievoorraad. Een record beschrijft hoeveel van een batch op een fysieke locatie ligt.
+This is the core WMS location stock record. It describes how much of a batch is present at a physical location.
 
-Belangrijke velden:
-
-| Veld | Type | Doel |
+| Field | Type | Purpose |
 |---|---|---|
 | `item_code` | Link | ERPNext Item. |
-| `item_name` | Data | Itemnaam. |
+| `item_name` | Data | Item name. |
 | `batch_no` | Link | ERPNext Batch. |
-| `customer` | Link | Klant/eigenaar van batch. |
+| `customer` | Link | Customer or owner for the batch. |
 | `zone` | Link | WMS Zone. |
 | `warehouse` | Link | ERPNext Warehouse. |
-| `storage_location` | Link | Fysieke locatie. |
-| `qty` | Float | Huidige locatiehoeveelheid. |
-| `uom` | Link | Eenheid. |
-| `reserved_qty` | Float | Gereserveerde hoeveelheid voor latere uitbreiding. |
+| `storage_location` | Link | Physical storage location. |
+| `qty` | Float | Current WMS location quantity. |
+| `uom` | Link | Unit of measure. |
+| `reserved_qty` | Float | Reserved quantity for later expansion. |
 
-Validaties:
+Validations:
 
-- De gekozen Storage Location moet bij hetzelfde warehouse horen.
-- Er mag geen tweede record bestaan voor dezelfde combinatie item, batch, warehouse en locatie.
-- Als `validate_against_erpnext` actief is, mag de totale WMS locatievoorraad voor item/batch/warehouse de ERPNext voorraad niet overschrijden.
+- The Storage Location must belong to the same warehouse.
+- A duplicate row for the same item, batch, warehouse and location is not allowed.
+- If `validate_against_erpnext` is enabled, total WMS location quantity for item/batch/warehouse may not exceed ERPNext stock quantity.
 
 ### Batch Location Movement
 
-Dit is de auditlog van WMS.
+This is the operational audit log.
 
-Belangrijke velden:
-
-| Veld | Type | Doel |
+| Field | Type | Purpose |
 |---|---|---|
-| `posting_date` | Date | Datum van beweging. |
-| `posting_time` | Time | Tijd van beweging. |
+| `posting_date` | Date | Movement date. |
+| `posting_time` | Time | Movement time. |
 | `item_code` | Link | ERPNext Item. |
 | `batch_no` | Link | ERPNext Batch. |
-| `movement_type` | Select | Soort beweging. |
-| `customer` | Link | Klant/eigenaar van batch. |
+| `movement_type` | Select | Type of movement. |
+| `customer` | Link | Customer or batch owner. |
 | `warehouse` | Link | ERPNext Warehouse. |
-| `from_location` | Link | Bronlocatie. |
-| `to_location` | Link | Doellocatie. |
-| `qty` | Float | Hoeveelheid. |
-| `reference_doctype` | Link | Brondocumenttype. |
-| `reference_name` | Dynamic Link | Brondocument. |
-| `remarks` | Small Text | Opmerking. |
+| `from_location` | Link | Source location. |
+| `to_location` | Link | Target location. |
+| `qty` | Float | Movement quantity. |
+| `reference_doctype` | Link | Source document type. |
+| `reference_name` | Dynamic Link | Source document. |
+| `remarks` | Small Text | Optional remark. |
 
 Movement types:
 
@@ -319,349 +294,200 @@ Movement types:
 
 ### WMS Putaway Rule
 
-Putaway Rules bepalen naar welke zone ontvangen voorraad bij voorkeur gaat.
+Putaway Rules determine the target zone for received stock.
 
-Belangrijke velden:
-
-| Veld | Type | Doel |
+| Field | Type | Purpose |
 |---|---|---|
-| `priority` | Int | Laagste waarde wordt eerst geprobeerd. |
-| `warehouse` | Link | Optioneel warehousefilter. |
-| `customer` | Link | Optionele klantmatch. |
-| `item_group` | Link | Optionele itemgroepmatch. |
-| `target_zone` | Link | Doelzone. |
-| `is_active` | Check | Actief of niet. |
+| `priority` | Int | Lowest number is evaluated first. |
+| `warehouse` | Link | Optional warehouse filter. |
+| `customer` | Link | Optional customer match. |
+| `item_group` | Link | Optional item group match. |
+| `target_zone` | Link | Target WMS Zone. |
+| `is_active` | Check | Enables or disables the rule. |
 
-Regelvolgorde:
+Rule evaluation:
 
-1. Sorteer actieve regels op prioriteit.
-2. Match warehouse als ingevuld.
-3. Match klant als ingevuld.
-4. Match item group als ingevuld.
-5. Zoek beste locatie binnen target zone.
-6. Geef voorkeur aan consolidatie met bestaande voorraad van dezelfde klant.
-7. Als dat niet kan, kies een lege actieve opslaglocatie.
+1. Sort active rules by priority.
+2. Match warehouse if filled.
+3. Match customer if filled.
+4. Match item group if filled.
+5. Use the target zone.
+6. Prefer a location that already contains stock for the same customer.
+7. Otherwise choose an empty active storage location.
 
 ### Location Pick
 
-Location Pick is het WMS pickdocument dat vanuit een of meer ERPNext Pick Lists wordt gegenereerd.
+Location Pick is the WMS picking document generated from one or more ERPNext Pick Lists.
 
-Belangrijke velden:
+Important fields:
 
-| Veld | Type | Doel |
-|---|---|---|
-| `naming_series` | Select | Nummerreeks `WMS-PICK-.YYYY.-.#####`. |
-| `pick_lists` | Table | Gekoppelde Pick Lists. |
-| `pick_list` | Link | Legacy/enkelvoudige Pick List referentie. |
-| `status` | Select | Draft, Open, Completed, Cancelled. |
-| `picking_strategy` | Select | Pick Sequence, FEFO of FIFO. |
-| `picker` | Link | Gebruiker die pickt. |
-| `posting_date` | Date | Datum. |
-| `posting_time` | Time | Tijd. |
-| `items` | Table | Pickregels. |
+- `pick_lists`: linked ERPNext Pick Lists.
+- `status`: Draft, Open, Completed or Cancelled.
+- `picking_strategy`: Pick Sequence, FEFO or FIFO.
+- `picker`: user who is picking.
+- `items`: Location Pick Line child table.
 
-Child table `Location Pick Source`:
-
-| Veld | Type | Doel |
-|---|---|---|
-| `pick_list` | Link | ERPNext Pick List die is opgenomen. |
-
-Child table `Location Pick Line`:
-
-| Veld | Type | Doel |
-|---|---|---|
-| `pick_list` | Link | ERPNext Pick List. |
-| `item_code` | Link | Item. |
-| `item_name` | Data | Itemnaam. |
-| `batch_no` | Link | Batch. |
-| `warehouse` | Link | Warehouse. |
-| `source_location` | Link | WMS bronlocatie. |
-| `required_qty` | Float | Te picken hoeveelheid. |
-| `picked_qty` | Float | Werkelijk gepickte hoeveelheid. |
-| `uom` | Link | Eenheid. |
-| `pick_list_item` | Data | ERPNext Pick List Item rij. |
+Each Location Pick Line stores item, batch, warehouse, source location, required quantity, picked quantity, UOM and the ERPNext Pick List Item row id.
 
 ### WMS QC Check
 
-WMS QC Check wordt gebruikt voor goederen die eerst moeten worden gecontroleerd.
+WMS QC Check is used when received goods must be inspected before putaway.
 
-Belangrijke velden:
+Important fields:
 
-| Veld | Type | Doel |
-|---|---|---|
-| `naming_series` | Select | Nummerreeks `WMS-QC-.YYYY.-.#####`. |
-| `purchase_receipt` | Link | Bron Purchase Receipt. |
-| `warehouse` | Link | Warehouse. |
-| `check_type` | Select | Kwaliteit, Kwantiteit of Beide. |
-| `status` | Select | Pending, In Progress, Completed. |
-| `inspector` | Link | Controleur. |
-| `check_date` | Date | Controledatum. |
-| `items` | Table | QC regels. |
-| `remarks` | Small Text | Opmerking. |
+- `purchase_receipt`
+- `warehouse`
+- `check_type`: Quality, Quantity or Both
+- `status`: Pending, In Progress or Completed
+- `inspector`
+- `check_date`
+- `items`: WMS QC Check Line child table
 
-Child table `WMS QC Check Line`:
-
-| Veld | Type | Doel |
-|---|---|---|
-| `item_code` | Link | Item. |
-| `item_name` | Data | Itemnaam. |
-| `batch_no` | Link | Batch. |
-| `from_location` | Link | QC Hold locatie. |
-| `received_qty` | Float | Ontvangen hoeveelheid. |
-| `approved_qty` | Float | Goedgekeurde hoeveelheid. |
-| `rejected_qty` | Float | Afgekeurde hoeveelheid. |
-| `outcome` | Select | Goedgekeurd, Afgekeurd of Gedeeltelijk. |
-| `quality_remarks` | Small Text | Opmerking. |
+Each QC line stores received quantity, approved quantity, rejected quantity and outcome.
 
 ### WMS Cross Dock
 
-WMS Cross Dock wordt gebruikt voor goederen die niet naar opslag gaan, maar direct doorstromen naar uitlevering.
+WMS Cross Dock tracks goods that should flow directly from receipt to outbound staging.
 
-Belangrijke velden:
+Important fields:
 
-| Veld | Type | Doel |
-|---|---|---|
-| `naming_series` | Select | Nummerreeks `WMS-XD-.YYYY.-.#####`. |
-| `purchase_receipt` | Link | Bron Purchase Receipt. |
-| `customer` | Link | Klant. |
-| `status` | Select | Pending, Staged, Delivered, Cancelled. |
-| `posting_date` | Date | Datum. |
-| `items` | Table | Cross-dock regels. |
-| `notes` | Small Text | Notities. |
-
-Child table `WMS Cross Dock Item`:
-
-| Veld | Type | Doel |
-|---|---|---|
-| `item_code` | Link | Item. |
-| `item_name` | Data | Itemnaam. |
-| `batch_no` | Link | Batch. |
-| `warehouse` | Link | Warehouse. |
-| `xdock_location` | Link | Cross-dock locatie. |
-| `sales_order` | Link | Gekoppelde Sales Order. |
-| `qty` | Float | Ontvangen hoeveelheid. |
-| `staged_qty` | Float | Naar staging verplaatste hoeveelheid. |
-| `delivered_qty` | Float | Geleverde hoeveelheid. |
-| `uom` | Link | Eenheid. |
+- `purchase_receipt`
+- `customer`
+- `status`: Pending, Staged, Delivered or Cancelled
+- `posting_date`
+- `items`: WMS Cross Dock Item child table
+- `notes`
 
 ### WMS Cycle Count
 
-WMS Cycle Count ondersteunt periodieke tellingen per zone.
+WMS Cycle Count supports physical counts by zone.
 
-Belangrijke velden:
+Important fields:
 
-| Veld | Type | Doel |
-|---|---|---|
-| `naming_series` | Select | Nummerreeks `WMS-CC-.YYYY.-.#####`. |
-| `count_date` | Date | Teldatum. |
-| `warehouse` | Link | Warehouse. |
-| `status` | Select | Draft, In Progress, Completed, Cancelled. |
-| `counted_by` | Link | Teller. |
-| `count_zones` | Table | Zones die geteld worden. |
-| `count_lines` | Table | Telregels. |
+- `count_date`
+- `warehouse`
+- `status`: Draft, In Progress, Completed or Cancelled
+- `counted_by`
+- `count_zones`
+- `count_lines`
 
-Child table `WMS Cycle Count Zone`:
-
-| Veld | Type | Doel |
-|---|---|---|
-| `zone` | Link | Te tellen zone. |
-
-Child table `WMS Cycle Count Line`:
-
-| Veld | Type | Doel |
-|---|---|---|
-| `storage_location` | Link | Locatie. |
-| `zone` | Data | Zone. |
-| `item_code` | Link | Item. |
-| `item_name` | Data | Itemnaam. |
-| `batch_no` | Link | Batch. |
-| `customer` | Link | Klant/eigenaar. |
-| `system_qty` | Float | WMS systeemhoeveelheid. |
-| `counted_qty` | Float | Getelde hoeveelheid. |
-| `difference` | Float | Verschil. |
-| `status` | Select | Pending, Counted, Corrected. |
-| `remarks` | Small Text | Opmerking. |
+Submitting a cycle count adjusts WMS location stock and writes `Cycle Count` movement records.
 
 ### WMS Settings
 
-Single DocType voor globale WMS instellingen.
+Single DocType for global WMS settings.
 
-| Veld | Type | Doel |
-|---|---|---|
-| `auto_create_on_receipt` | Check | Automatisch WMS voorraad maken bij Purchase Receipt. |
-| `validate_against_erpnext` | Check | WMS locatievoorraad toetsen aan ERPNext voorraad. |
-| `default_putaway_mode` | Select | Manual, Suggest of Enforce. |
-| `qc_trigger` | Select | Per Receipt Line of Never. |
-| `auto_create_cross_dock` | Check | Cross-dock automatisch detecteren. |
-
-Let op: niet elke setting is al in elke flow volledig afdwingend. De belangrijkste actieve settings zijn `auto_create_on_receipt` en `validate_against_erpnext`.
+| Field | Purpose |
+|---|---|
+| `auto_create_on_receipt` | Automatically create WMS location stock when submitting a Purchase Receipt. |
+| `validate_against_erpnext` | Validate WMS location quantity against ERPNext stock. |
+| `default_putaway_mode` | Manual, Suggest or Enforce. |
+| `qc_trigger` | Per Receipt Line or Never. |
+| `auto_create_cross_dock` | Detect cross-dock from ERPNext links where possible. |
 
 ---
 
-## ERPNext integraties
+## ERPNext Integrations
 
 ### Custom Fields
 
-De app voegt velden toe aan ERPNext documenten.
+The app adds fields to ERPNext documents.
 
-Op `Batch`:
+On `Batch`:
 
-| Veld | Type | Doel |
+| Field | Type | Purpose |
 |---|---|---|
-| `customer` | Link Customer | Klant/eigenaar van de batch voor WMS segregatie. |
+| `customer` | Link Customer | Customer that owns or controls the batch for WMS segregation. |
 
-Op `Purchase Receipt Item`:
+On `Purchase Receipt Item`:
 
-| Veld | Type | Doel |
+| Field | Type | Purpose |
 |---|---|---|
-| `wms_customer` | Link Customer | Klant/eigenaar voor deze ontvangstregel. |
-| `wms_require_qc` | Check | Ontvangstregel moet naar QC Hold. |
-| `wms_cross_dock` | Check | Ontvangstregel moet naar cross-dock. |
-| `wms_cross_dock_so` | Link Sales Order | Optionele gekoppelde Sales Order voor cross-dock. |
+| `wms_customer` | Link Customer | Customer or owner for this receipt line. |
+| `wms_require_qc` | Check | Send this receipt line to QC Hold. |
+| `wms_cross_dock` | Check | Send this receipt line to Cross-dock Staging. |
+| `wms_cross_dock_so` | Link Sales Order | Optional Sales Order for cross-dock. |
 
 ### Purchase Receipt
 
-Hook:
+On submit:
 
-```python
-doc_events = {
-    "Purchase Receipt": {
-        "on_submit": "frappe_wms.wms.events.purchase_receipt.on_submit",
-        "on_cancel": "frappe_wms.wms.events.purchase_receipt.on_cancel",
-    }
-}
-```
+- If `auto_create_on_receipt` is disabled, WMS does nothing.
+- WMS reads batch rows with `iter_batch_entries`.
+- `wms_customer` is copied to the Batch if the Batch has no customer yet.
+- Cross-dock takes priority over QC.
+- Cross-dock lines go to Cross-dock Staging.
+- QC lines go to QC Hold.
+- Standard lines go to Receiving.
+- QC creates a `WMS QC Check`.
+- Cross-dock creates a `WMS Cross Dock`.
 
-Bij submit:
-
-- Als `auto_create_on_receipt` uit staat, doet WMS niets.
-- WMS leest batchregels via `iter_batch_entries`.
-- `wms_customer` wordt op de Batch gezet als daar nog geen klant staat.
-- Cross-dock heeft voorrang boven QC.
-- Cross-dock regels gaan naar Cross-dock Staging.
-- QC regels gaan naar QC Hold.
-- Normale regels gaan naar Receiving.
-- Voor QC wordt automatisch een `WMS QC Check` gemaakt.
-- Voor cross-dock wordt automatisch een `WMS Cross Dock` gemaakt.
-
-Bij cancel:
-
-- WMS probeert de eerder ontvangen hoeveelheid terug te draaien vanaf de verwachte locatie.
-- Er wordt nooit meer afgetrokken dan nog beschikbaar is op die locatie.
+On cancel, WMS attempts to reverse the earlier receipt from the expected WMS location and never deducts more than is still available.
 
 ### Pick List
 
-De app voegt client-side functionaliteit toe aan ERPNext Pick List.
-
-Knop:
+The app adds a client-side button to ERPNext Pick List:
 
 ```text
 WMS -> Generate Location Pick
 ```
 
-De gebruiker kiest:
-
-- picking strategie;
-- nieuwe Location Pick of toevoegen aan bestaande open Location Pick.
-
-WMS zoekt daarna beschikbare `Batch Location Stock` op actieve opslaglocaties en maakt Location Pick regels.
+The user selects a picking strategy and either creates a new Location Pick or appends to an existing open Location Pick.
 
 ### Delivery Note
 
-Bij submit van Delivery Note:
-
-- WMS zoekt de staginglocatie voor het warehouse.
-- WMS trekt batchhoeveelheid af uit staging.
-- De movement krijgt type `Pick`.
+On Delivery Note submit, WMS finds staging stock and deducts available staged quantity. The movement type is `Pick`.
 
 ### Stock Entry
 
-Bij submit van Stock Entry:
-
-- De bronkant trekt voorraad af uit staging, als daar voorraad staat.
-- De doelkant plaatst voorraad in Receiving.
-- Als het een productie-retour is (`Material Transfer` met `work_order`), probeert WMS eerst naar Inspection te boeken.
+On Stock Entry submit, the source side deducts from staging if staged stock exists. The target side adds stock to Receiving. Production returns with `Material Transfer` and `work_order` are routed to Inspection when possible.
 
 ---
 
 ## Workflows
 
-### 1. Standaard inbound ontvangst
-
-Doel: batchvoorraad na Purchase Receipt zichtbaar maken in Receiving.
+### Standard Inbound Receipt
 
 ```text
 Purchase Receipt submit
-  -> WMS leest batchregels
-  -> WMS zet klant op Batch als wms_customer is ingevuld
-  -> WMS zoekt Receiving locatie
-  -> WMS maakt/verhoogt Batch Location Stock
-  -> WMS schrijft Batch Location Movement met movement_type Inbound
+  -> WMS reads batch entries
+  -> WMS sets customer on Batch if wms_customer is filled
+  -> WMS finds Receiving location
+  -> WMS creates or increases Batch Location Stock
+  -> WMS writes Batch Location Movement with movement_type Inbound
 ```
 
-Voorbeeld:
+Example:
 
 ```text
 Item: ITEM-A
 Batch: BATCH-001
 Warehouse: WH-01
-Receiving locatie: RECV-01
+Receiving location: RECV-01
 Qty: 100
-Klant: Klant A
+Customer: Customer A
 ```
 
-Resultaat:
-
-```text
-Batch Location Stock
-  item_code: ITEM-A
-  batch_no: BATCH-001
-  warehouse: WH-01
-  storage_location: RECV-01
-  qty: 100
-  customer: Klant A
-```
-
-### 2. QC ontvangst
-
-Doel: goederen eerst blokkeren voor controle.
+### QC Receipt
 
 ```text
 Purchase Receipt Item: wms_require_qc = 1
-  -> WMS zoekt QC Hold locatie
-  -> voorraad komt in QC Hold
-  -> WMS QC Check wordt aangemaakt
+  -> WMS finds QC Hold location
+  -> stock is received into QC Hold
+  -> WMS QC Check is created
 ```
 
-Daarna:
+Then:
 
 ```text
 WMS QC Check
-  -> medewerker vult approved_qty en rejected_qty
+  -> user enters approved_qty and rejected_qty
   -> submit
-     -> approved_qty naar Receiving
-     -> rejected_qty naar Quarantine
+     -> approved_qty to Receiving
+     -> rejected_qty to Quarantine
 ```
 
-Voorbeeld:
-
-```text
-Ontvangen: 100
-Goedgekeurd: 95
-Afgekeurd: 5
-```
-
-Resultaat:
-
-- 95 gaat van QC Hold naar Receiving.
-- 5 gaat van QC Hold naar Quarantine.
-- Beide bewegingen krijgen movement type `QC Release`.
-
-### 3. Cross-dock ontvangst
-
-Doel: goederen niet opslaan, maar direct doorzetten naar uitlevering.
-
-Cross-dock kan handmatig:
+### Cross-dock Receipt
 
 ```text
 Purchase Receipt Item:
@@ -669,165 +495,122 @@ Purchase Receipt Item:
   wms_cross_dock_so = SO-0001
 ```
 
-Of via een bestaande koppeling tussen Purchase Order Item en Sales Order.
-
 Flow:
 
 ```text
 Purchase Receipt submit
-  -> WMS zoekt Cross-dock Staging locatie
-  -> WMS plaatst voorraad op cross-dock locatie
-  -> WMS Cross Dock document wordt aangemaakt
+  -> WMS finds Cross-dock Staging location
+  -> WMS places stock on the cross-dock location
+  -> WMS Cross Dock document is created
 ```
 
-Vervolgens:
+Then:
 
 ```text
 WMS Cross Dock
-  -> knop Gereed voor Verzending
-  -> WMS verplaatst beschikbare qty van Cross-dock Staging naar Outbound/Picking Staging
+  -> button Ready to Ship
+  -> WMS moves available qty from Cross-dock Staging to Outbound/Picking Staging
 ```
 
-### 4. Putaway van Receiving naar opslag
-
-Doel: ontvangen voorraad naar de juiste opslaglocatie verplaatsen.
-
-Flow:
+### Putaway
 
 ```text
-Open Batch Location Stock record in Receiving
-  -> klik Voorraad Verplaatsen
-  -> WMS vraagt putaway suggestie op
-  -> gebruiker kiest doel locatie
-  -> WMS controleert compatibiliteit
-  -> WMS verplaatst voorraad en schrijft movement
+Open Batch Location Stock in Receiving
+  -> click Move Stock
+  -> WMS fetches putaway suggestion
+  -> user chooses target location
+  -> WMS checks compatibility
+  -> WMS moves stock and writes movement
 ```
 
-Putaway suggestie:
+Compatibility checks:
 
-1. Zoek actieve WMS Putaway Rules.
-2. Match warehouse, klant en item group.
-3. Kies target zone.
-4. Zoek eerst locatie met voorraad van dezelfde klant.
-5. Anders zoek lege actieve opslaglocatie.
+- Different customer on storage location: blocked.
+- Same customer with existing stock: warning and confirmation.
+- Capacity exceeded: warning.
 
-Compatibiliteit:
-
-- Andere klant op opslaglocatie: geblokkeerd.
-- Zelfde klant met bestaande voorraad: waarschuwing en bevestiging.
-- Capaciteit overschreden: waarschuwing.
-
-### 5. Outbound picking
-
-Doel: ERPNext Pick List vertalen naar fysieke pickregels.
+### Outbound Picking
 
 ```text
 ERPNext Pick List
-  -> knop WMS Generate Location Pick
-  -> kies picking strategie
-  -> WMS maakt Location Pick
+  -> WMS Generate Location Pick
+  -> select picking strategy
+  -> WMS creates Location Pick
 ```
 
-De Location Pick bevat regels per batch en fysieke source location.
-
-Bij submit:
+On Location Pick submit:
 
 ```text
 Location Pick submit
-  -> WMS controleert of picked_qty beschikbaar is
-  -> WMS verplaatst picked_qty naar Outbound/Picking Staging
-  -> status wordt Completed
+  -> WMS checks that picked_qty is available
+  -> WMS moves picked_qty to Outbound/Picking Staging
+  -> status becomes Completed
 ```
 
-Na submit toont de client een controle als WMS picked qty afwijkt van ERPNext Pick List `picked_qty`. De gebruiker kan dan kiezen om ERPNext picked qty bij te werken naar de WMS waarden.
-
-### 6. Delivery Note uitlevering
-
-Doel: stagingvoorraad afboeken wanneer ERPNext uitlevering wordt geboekt.
+### Delivery Note
 
 ```text
 Delivery Note submit
-  -> WMS zoekt Outbound/Picking Staging
-  -> WMS trekt beschikbare staged qty af
+  -> WMS finds Outbound/Picking Staging
+  -> WMS deducts available staged qty
   -> movement_type Pick
 ```
 
-### 7. Productie staging
-
-Doel: materiaal naar staging brengen en bij Stock Entry verwerken.
-
-WMS kan Pick Lists voor productie omzetten naar Location Picks. Het submitten van Location Pick brengt materiaal naar staging.
-
-Bij Stock Entry submit:
-
-- Bronwarehouse met stagingvoorraad: WMS trekt af uit staging.
-- Target warehouse: WMS voegt batch toe aan Receiving.
-- Productieretour met `Material Transfer` en `work_order`: WMS boekt naar Inspection als die locatie bestaat.
-
-### 8. Cycle count
-
-Doel: fysieke tellingen per zone uitvoeren.
+### Cycle Count
 
 ```text
 WMS Cycle Count
-  -> kies warehouse
-  -> voeg zones toe
-  -> klik Telregels Genereren
-  -> WMS vult count_lines vanuit Batch Location Stock
-  -> medewerker vult counted_qty
+  -> choose warehouse
+  -> add zones
+  -> click Generate Count Lines
+  -> WMS fills count_lines from Batch Location Stock
+  -> user enters counted_qty
   -> submit
 ```
 
-Bij submit:
+On submit:
 
-- Verschillen worden berekend.
-- Positief verschil verhoogt Batch Location Stock.
-- Negatief verschil verlaagt Batch Location Stock.
+- Positive difference increases Batch Location Stock.
+- Negative difference decreases Batch Location Stock.
 - Movement type is `Cycle Count`.
-- Regels krijgen status `Corrected`.
-
-Belangrijk: deze correctie wijzigt WMS locatievoorraad. Voor financiele voorraadcorrecties blijft ERPNext leidend. Controleer verschillen met het reconciliatie rapport.
+- Lines are marked `Corrected`.
 
 ---
 
-## Picking strategieen
+## Picking Strategies
 
-Location Pick ondersteunt drie sorteringen.
-
-| Strategie | Sortering |
+| Strategy | Sort Logic |
 |---|---|
-| Pick Sequence | `Storage Location.pick_sequence` oplopend, daarna grootste beschikbare qty. |
-| FEFO - First Expired, First Out | Batch expiry date oplopend, lege expiry dates als laatste, daarna pick sequence. |
-| FIFO - First In, First Out | Batch creation oplopend, daarna pick sequence. |
+| Pick Sequence | `Storage Location.pick_sequence` ascending, then largest available quantity. |
+| FEFO - First Expired, First Out | Batch expiry date ascending, empty expiry dates last, then pick sequence. |
+| FIFO - First In, First Out | Batch creation ascending, then pick sequence. |
 
-Voorbeeld:
+Example:
 
 ```text
-Vraag: 80 stuks ITEM-A batch BATCH-001
+Demand: 80 units of ITEM-A batch BATCH-001
 
-Beschikbaar:
+Available:
   A-01-01: 30
   A-01-02: 70
 
-Resultaat:
-  Pickregel 1: A-01-01, 30
-  Pickregel 2: A-01-02, 50
+Result:
+  Pick line 1: A-01-01, 30
+  Pick line 2: A-01-02, 50
 ```
-
-WMS kan dus een pickvraag splitsen over meerdere locaties.
 
 ---
 
-## Klantsegregatie
+## Customer Segregation
 
-Klantsegregatie voorkomt dat voorraad van verschillende klanten op dezelfde opslaglocatie wordt gemengd.
+Customer segregation prevents stock from different customers from being mixed on the same storage location.
 
-Deze controle geldt voor opslaglocaties:
+This check applies to:
 
 - Storage
 - Active Storage
 
-Deze controle geldt niet voor transitlocaties:
+This check does not apply to transit locations:
 
 - Receiving
 - Picking Staging
@@ -838,45 +621,21 @@ Deze controle geldt niet voor transitlocaties:
 - Inspection
 - Quarantine
 
-Regels:
+Rules:
 
-| Situatie | Resultaat |
+| Situation | Result |
 |---|---|
-| Locatie is leeg | Toegestaan. |
-| Zelfde klant, zelfde item | Toegestaan. |
-| Zelfde klant, ander item | Toegestaan na waarschuwing. |
-| Andere klant | Geblokkeerd. |
-| Eigen voorraad gemengd met klantvoorraad | Geblokkeerd. |
-
-Voorbeeld:
-
-```text
-Locatie A-01-01 bevat:
-  ITEM-A, BATCH-001, Klant A, qty 50
-
-Nieuwe putaway:
-  ITEM-B, BATCH-002, Klant A, qty 25
-
-Resultaat:
-  WMS toont waarschuwing, maar staat toe na bevestiging.
-```
-
-```text
-Locatie A-01-01 bevat:
-  ITEM-A, BATCH-001, Klant A, qty 50
-
-Nieuwe putaway:
-  ITEM-C, BATCH-003, Klant B, qty 10
-
-Resultaat:
-  WMS blokkeert de verplaatsing.
-```
+| Location is empty | Allowed. |
+| Same customer, same item | Allowed. |
+| Same customer, different item | Allowed after warning. |
+| Different customer | Blocked. |
+| Company stock mixed with customer stock | Blocked. |
 
 ---
 
-## Configuratie
+## Configuration
 
-### Stap 1: WMS Settings
+### Step 1: WMS Settings
 
 Open:
 
@@ -884,39 +643,35 @@ Open:
 WMS -> WMS Settings
 ```
 
-Aanbevolen startinstellingen:
+Recommended starting values:
 
-| Setting | Waarde |
+| Setting | Value |
 |---|---|
-| Auto Create on Receipt | Aan |
-| Validate Against ERPNext | Aan |
-| Default Putaway Mode | Suggest |
+| Auto-create Location Stock on Purchase Receipt | Enabled |
+| Validate WMS Stock against ERPNext Stock | Enabled |
+| Putaway Mode | Suggest |
 | QC Trigger | Per Receipt Line |
-| Auto Create Cross Dock | Aan indien cross-dock gebruikt wordt |
+| Auto-detect Cross-dock via PO to SO link | Enabled if cross-dock is used |
 
-### Stap 2: Zones aanmaken
+### Step 2: Create Zones
 
-Maak minimaal de zones die bij jouw proces horen.
+Recommended base setup:
 
-Aanbevolen basis:
-
-| Zone | Type | Doel |
+| Zone | Type | Purpose |
 |---|---|---|
-| RECV-ZONE | Receiving | Binnenkomende goederen. |
-| STORAGE-A | Active Storage | Normale opslag. |
-| QC-ZONE | QC Hold | Te controleren goederen. |
-| OUT-STAGE | Outbound Staging | Gepickte goederen voor verzending. |
-| XDOCK-ZONE | Cross-dock Staging | Direct door te zetten goederen. |
-| INSP-ZONE | Inspection | Productieretouren of controle. |
-| QUAR-ZONE | Quarantine | Afgekeurde of geblokkeerde goederen. |
+| RECV-ZONE | Receiving | Incoming goods. |
+| STORAGE-A | Active Storage | Normal storage. |
+| QC-ZONE | QC Hold | Goods waiting for inspection. |
+| OUT-STAGE | Outbound Staging | Picked goods waiting for shipment. |
+| XDOCK-ZONE | Cross-dock Staging | Goods that flow directly to outbound. |
+| INSP-ZONE | Inspection | Returns or inspection stock. |
+| QUAR-ZONE | Quarantine | Rejected or blocked goods. |
 
-### Stap 3: Storage Locations aanmaken
+### Step 3: Create Storage Locations
 
-Voor elk WMS warehouse moet er minimaal een actieve Receiving locatie zijn als inbound automatisch moet werken.
+Every WMS warehouse needs at least one active Receiving location if inbound automation should work.
 
-Aanbevolen basis:
-
-| Locatie | Type | Zone | Pick sequence |
+| Location | Type | Zone | Pick sequence |
 |---|---|---|---|
 | RECV-01 | Receiving | RECV-ZONE | 0 |
 | A-01-01 | Active Storage | STORAGE-A | 10 |
@@ -927,201 +682,90 @@ Aanbevolen basis:
 | INSP-01 | Inspection | INSP-ZONE | 0 |
 | QUAR-01 | Quarantine | QUAR-ZONE | 0 |
 
-### Stap 4: Putaway Rules aanmaken
+### Step 4: Create Putaway Rules
 
-Voorbeeldregels:
+Example rules:
 
 | Priority | Warehouse | Customer | Item Group | Target Zone |
 |---|---|---|---|---|
-| 1 | WH-01 | Klant A |  | STORAGE-A |
-| 2 | WH-01 | Klant B |  | STORAGE-B |
-| 10 | WH-01 |  | Grondstoffen | STORAGE-RAW |
+| 1 | WH-01 | Customer A |  | STORAGE-A |
+| 2 | WH-01 | Customer B |  | STORAGE-B |
+| 10 | WH-01 |  | Raw Materials | STORAGE-RAW |
 | 99 | WH-01 |  |  | STORAGE-GENERAL |
 
-Gebruik lege velden als wildcard.
-
-### Stap 5: ERPNext Items voorbereiden
-
-Voor WMS beheerde artikelen:
-
-- Zet batch tracking aan op Item.
-- Gebruik batches bij Purchase Receipt, Pick List, Delivery Note en Stock Entry.
-- Controleer dat ERPNext v16 Serial and Batch Bundle correct wordt aangemaakt.
+Blank fields act as wildcards.
 
 ---
 
-## Voorbeeldinrichting
+## Example Setup
 
-Onderstaand voorbeeld gebruikt alleen generieke namen.
-
-### Warehouse
+This example uses generic names only.
 
 ```text
-WH-01
-```
+Warehouse:
+  WH-01
 
-### Zones
+Zones:
+  RECV-ZONE       Receiving
+  STORAGE-A       Active Storage
+  STORAGE-B       Active Storage
+  QC-ZONE         QC Hold
+  OUT-STAGE       Outbound Staging
+  XDOCK-ZONE      Cross-dock Staging
+  INSP-ZONE       Inspection
+  QUAR-ZONE       Quarantine
 
-```text
-RECV-ZONE       Receiving
-STORAGE-A       Active Storage
-STORAGE-B       Active Storage
-QC-ZONE         QC Hold
-OUT-STAGE       Outbound Staging
-XDOCK-ZONE      Cross-dock Staging
-INSP-ZONE       Inspection
-QUAR-ZONE       Quarantine
-```
+Locations:
+  RECV-01         Receiving             RECV-ZONE
+  A-01-01         Active Storage        STORAGE-A
+  A-01-02         Active Storage        STORAGE-A
+  B-01-01         Active Storage        STORAGE-B
+  QC-01           QC Hold               QC-ZONE
+  OUT-01          Outbound Staging      OUT-STAGE
+  XDOCK-01        Cross-dock Staging    XDOCK-ZONE
+  INSP-01         Inspection            INSP-ZONE
+  QUAR-01         Quarantine            QUAR-ZONE
 
-### Locaties
+Items:
+  ITEM-A          Batch tracked item
+  ITEM-B          Batch tracked item
 
-```text
-RECV-01         Receiving             RECV-ZONE
-A-01-01         Active Storage        STORAGE-A
-A-01-02         Active Storage        STORAGE-A
-B-01-01         Active Storage        STORAGE-B
-QC-01           QC Hold               QC-ZONE
-OUT-01          Outbound Staging      OUT-STAGE
-XDOCK-01        Cross-dock Staging    XDOCK-ZONE
-INSP-01         Inspection            INSP-ZONE
-QUAR-01         Quarantine            QUAR-ZONE
-```
+Batches:
+  BATCH-001       Batch for ITEM-A
+  BATCH-002       Batch for ITEM-B
 
-### Artikelen en batches
-
-```text
-ITEM-A          Batch tracked item
-ITEM-B          Batch tracked item
-BATCH-001       Batch voor ITEM-A
-BATCH-002       Batch voor ITEM-B
-```
-
-### Klanten
-
-```text
-Klant A
-Klant B
-```
-
-### Inbound voorbeeld
-
-```text
-Purchase Receipt:
-  ITEM-A, BATCH-001, qty 100, customer Klant A
-
-Na submit:
-  Batch Location Stock:
-    ITEM-A / BATCH-001 / WH-01 / RECV-01 / qty 100 / Klant A
-```
-
-### Putaway voorbeeld
-
-```text
-Move stock:
-  source: RECV-01
-  target: A-01-01
-  qty: 100
-
-Na bevestiging:
-  RECV-01 qty wordt 0
-  A-01-01 qty wordt 100
-  movement_type wordt Putaway
-```
-
-### Pick voorbeeld
-
-```text
-Pick List vraagt 40 van ITEM-A, BATCH-001.
-
-Location Pick:
-  source_location: A-01-01
-  required_qty: 40
-  picked_qty: 40
-
-Na submit:
-  A-01-01 qty wordt 60
-  OUT-01 qty wordt 40
-```
-
-### Delivery voorbeeld
-
-```text
-Delivery Note submit voor 40 ITEM-A, BATCH-001.
-
-Na submit:
-  OUT-01 qty wordt 0
+Customers:
+  Customer A
+  Customer B
 ```
 
 ---
 
-## Dashboards en rapporten
+## Dashboards And Reports
 
-### Workspace
+The WMS workspace shows:
 
-De WMS workspace toont:
+- shortcuts for Location Pick, Batch Location Stock, Storage Location and WMS Cycle Count;
+- KPI cards for QC, cross-dock and active locations;
+- chart `Warehouse Movements by Type`;
+- link cards for Operations, Stock & Locations, Setup and Reports.
 
-- Shortcuts voor Location Pick, Batch Location Stock, Storage Location en WMS Cycle Count.
-- KPI cards voor QC, cross-dock en actieve locaties.
-- Chart `Warehouse Movements by Type`.
-- Link cards voor Operations, Stock & Locations, Setup en Reports.
+Reports:
 
-### Dashboard record
-
-De app levert een Dashboard record `WMS` met:
-
-- drie Number Cards;
-- een Dashboard Chart;
-- module `WMS`.
-
-Dit zorgt ervoor dat WMS ook zichtbaar is onder Build > Dashboard.
-
-### Number Cards
-
-| Card | Bron | Filter |
-|---|---|---|
-| Pending QC Checks | WMS QC Check | `status = Pending` |
-| Cross-dock Pending | WMS Cross Dock | `status = Pending` |
-| Active Storage Locations | Storage Location | `is_active = 1` |
-
-### Dashboard Chart
-
-| Chart | Bron | Doel |
-|---|---|---|
-| Warehouse Movements by Type | Batch Location Movement | Aantal bewegingen per movement type. |
-
-### Rapporten
-
-| Rapport | Doel |
+| Report | Purpose |
 |---|---|
-| Zone Occupancy | Bezetting per zone op basis van locaties, capaciteit en actuele voorraad. |
-| Customer Stock Overview | Voorraad per klant, zone, warehouse, item, batch en locatie. |
-| Pick Performance | Vereiste versus gepickte aantallen per Location Pick en picker. |
-| Inbound Outbound Volume | Bewegingen per datum, warehouse, movement type en klant. |
-| Location Pick Lines | Detailoverzicht van alle Location Pick regels. |
-| Location Stock Reconciliation | Vergelijkt ERPNext voorraad met WMS locatievoorraad per item, batch en warehouse. |
-
-### Reconciliatie rapport
-
-`Location Stock Reconciliation` is belangrijk voor beheer. Het toont:
-
-- ERPNext Qty;
-- Location Qty;
-- Difference;
-- Location Breakdown.
-
-Als `Difference` niet nul is, moet onderzocht worden of:
-
-- een ERPNext boeking buiten WMS om is gedaan;
-- een WMS cycle count correctie nodig is;
-- een batch of Serial and Batch Bundle ontbreekt;
-- een warehouse geen WMS locaties heeft;
-- een migratie of historische boeking niet volledig is verwerkt.
+| Zone Occupancy | Occupancy per zone based on locations, capacity and current stock. |
+| Customer Stock Overview | Stock per customer, zone, warehouse, item, batch and location. |
+| Pick Performance | Required versus picked quantities per Location Pick and picker. |
+| Inbound Outbound Volume | Movements by date, warehouse, movement type and customer. |
+| Location Pick Lines | Detailed overview of all Location Pick lines. |
+| Location Stock Reconciliation | Compares ERPNext stock with WMS location stock per item, batch and warehouse. |
 
 ---
 
-## Installatie
+## Installation
 
-Voor een normale bench installatie:
+For a normal bench installation:
 
 ```bash
 bench get-app <repository-url>
@@ -1129,122 +773,71 @@ bench --site <site-name> install-app frappe_wms
 bench --site <site-name> migrate
 ```
 
-Voor Frappe Cloud:
+For Frappe Cloud:
 
-1. Voeg de app toe aan de site.
-2. Controleer dat de juiste branch en commit actief zijn.
-3. Deploy de app.
+1. Add the app to the site.
+2. Confirm that the correct branch and commit are active.
+3. Deploy the app.
 4. Run migrate.
-5. Hard refresh de browser met `Ctrl+Shift+R`.
+5. Hard-refresh the browser with `Ctrl+Shift+R`.
 6. Open `/desk/wms`.
 
-Na installatie:
+After installation:
 
 1. Open WMS Settings.
-2. Maak WMS Zones aan.
-3. Maak Storage Locations aan.
-4. Maak Putaway Rules aan.
-5. Controleer dat de WMS workspace zichtbaar is.
-6. Test met een kleine Purchase Receipt en batch.
+2. Create WMS Zones.
+3. Create Storage Locations.
+4. Create Putaway Rules.
+5. Confirm that the WMS workspace is visible.
+6. Test with a small Purchase Receipt and batch.
 
 ---
 
-## Upgrade en migratie
+## Upgrade And Migration
 
-Na een update:
+After updating the app:
 
 ```bash
 bench --site <site-name> migrate
 bench --site <site-name> clear-cache
 ```
 
-De app bevat patches voor:
-
-- aanmaken en normaliseren van WMS workspace;
-- verwijderen van oude user-specifieke WMS workspace rows;
-- opschonen van oude workspace link targets;
-- toevoegen van Purchase Receipt custom fields;
-- toevoegen van Batch customer veld;
-- fasegewijze schema uitbreidingen;
-- normalisatie van WMS app routing voor ERPNext/Frappe v16.
-
-Belangrijke patch:
+Important patches:
 
 ```text
 frappe_wms.patches.v1_1.normalize_wms_v16_app_routing
+frappe_wms.patches.v1_2.translate_wms_sources_to_english
 ```
 
-Deze patch:
+The v1.2 translation patch:
 
-- ruimt oude workspace namen op;
-- forceert de public WMS workspace naar de juiste module/app velden;
-- maakt of werkt Dashboard `WMS` bij;
-- wist cache na afloop.
+- maps old Dutch QC select values to English values;
+- updates existing Custom Field labels and descriptions;
+- clears cache after migration.
 
 ---
 
-## Validatie en testen
+## Validation And Testing
 
-### Minimale functionele test
+Minimum functional test:
 
-Voer deze test uit op een testsite of veilige omgeving.
-
-1. Maak `WH-01` aan.
-2. Maak zones en locaties aan:
-   - Receiving
-   - Active Storage
-   - Outbound Staging
-   - QC Hold
-   - Cross-dock Staging
-   - Quarantine
-3. Zet WMS Settings aan:
-   - Auto Create on Receipt
-   - Validate Against ERPNext
-4. Maak batch tracked item `ITEM-A`.
-5. Boek een Purchase Receipt met batch `BATCH-001`.
-6. Controleer Batch Location Stock op Receiving.
-7. Verplaats voorraad naar Active Storage.
-8. Maak Pick List.
-9. Genereer Location Pick.
-10. Vul picked_qty.
+1. Create `WH-01`.
+2. Create Receiving, Active Storage, Outbound Staging, QC Hold, Cross-dock Staging and Quarantine locations.
+3. Enable WMS Settings.
+4. Create batch-tracked item `ITEM-A`.
+5. Submit a Purchase Receipt with batch `BATCH-001`.
+6. Check Batch Location Stock on Receiving.
+7. Move stock to Active Storage.
+8. Create Pick List.
+9. Generate Location Pick.
+10. Fill picked_qty.
 11. Submit Location Pick.
-12. Controleer voorraad op Outbound/Picking Staging.
-13. Boek Delivery Note.
-14. Controleer dat stagingvoorraad is afgetrokken.
+12. Check stock on Outbound/Picking Staging.
+13. Submit Delivery Note.
+14. Confirm that staging stock was deducted.
 15. Open Location Stock Reconciliation.
 
-### QC test
-
-1. Maak Purchase Receipt Item met `wms_require_qc = 1`.
-2. Submit Purchase Receipt.
-3. Controleer dat voorraad in QC Hold staat.
-4. Controleer dat WMS QC Check is aangemaakt.
-5. Vul approved en rejected qty.
-6. Submit WMS QC Check.
-7. Controleer Receiving en Quarantine.
-
-### Cross-dock test
-
-1. Maak Purchase Receipt Item met `wms_cross_dock = 1`.
-2. Koppel optioneel een Sales Order.
-3. Submit Purchase Receipt.
-4. Controleer WMS Cross Dock.
-5. Klik Gereed voor Verzending.
-6. Controleer dat voorraad naar Outbound/Picking Staging is verplaatst.
-
-### Cycle count test
-
-1. Maak WMS Cycle Count.
-2. Kies warehouse en zones.
-3. Klik Telregels Genereren.
-4. Vul counted_qty afwijkend in.
-5. Submit.
-6. Controleer Batch Location Stock.
-7. Controleer Batch Location Movement met movement type `Cycle Count`.
-
-### Technische lokale controles
-
-Voor ontwikkelaars:
+Developer checks:
 
 ```bash
 python -m py_compile frappe_wms/hooks.py frappe_wms/wms/events/utils.py
@@ -1252,7 +845,7 @@ python -m py_compile frappe_wms/wms/doctype/location_pick/location_pick.py
 python -m py_compile frappe_wms/wms/doctype/batch_location_stock/batch_location_stock.py
 ```
 
-Als er een bench testsite beschikbaar is:
+If a bench test site is available:
 
 ```bash
 bench --site <test-site> run-tests --app frappe_wms
@@ -1260,43 +853,76 @@ bench --site <test-site> run-tests --app frappe_wms
 
 ---
 
-## Beperkingen en aandachtspunten
+## Translations
 
-### Geen volledige serial number WMS
+The app uses English as the source language. This is the normal pattern for Frappe apps: DocType labels, report labels, Python messages and JavaScript messages should be written in English and wrapped in translation functions where relevant.
 
-ERPNext v16 Serial and Batch Bundle wordt gelezen om batchinformatie te vinden. De app beheert geen volledige serial number locatievoorraad als apart kernproces.
+Frappe chooses translations from the active language context:
 
-### Cycle count corrigeert WMS locatievoorraad
+1. request `_lang` parameter;
+2. preferred language cookie for guests;
+3. request `Accept-Language` for guests;
+4. the logged-in user's language;
+5. System Settings language;
+6. fallback to English.
 
-Cycle Count past `Batch Location Stock` aan. Financiele voorraadcorrecties moeten via ERPNext worden beheerd. Gebruik het reconciliatie rapport om verschillen te zien.
+App translations live in:
 
-### Putaway mode is deels voorbereid
+```text
+frappe_wms/translations/<language-code>.csv
+```
 
-`default_putaway_mode` bevat Manual, Suggest en Enforce. De huidige UI gebruikt vooral suggesties en bevestigingen. Volledige afdwinging kan per proces verder worden uitgebreid.
+Examples:
 
-### Auto cross-dock setting
+```text
+frappe_wms/translations/nl.csv
+frappe_wms/translations/de.csv
+frappe_wms/translations/fr.csv
+```
 
-`auto_create_cross_dock` bestaat als instelling. De Purchase Receipt logica detecteert cross-dock vooral via handmatige velden of bestaande PO/SO koppeling.
+Each CSV row maps an English source string to a translated string:
 
-### Warehouse inrichting is verplicht
+```csv
+Move Stock,<translated Move Stock>
+Ready to Ship,<translated Ready to Ship>
+Generate Count Lines,<translated Generate Count Lines>
+```
 
-Zonder actieve Storage Locations per warehouse slaat WMS sommige events bewust over. Dit voorkomt dat niet-WMS warehouses onverwacht fouten geven.
+The repository includes `translations/nl.csv` and `translations/fr.csv` as initial translation baselines. Additional languages can be added by creating another CSV file with the same source strings and translated values.
 
-### Geen standaard rollenpakket
+Developer rules for new UI text:
 
-De huidige app definieert geen uitgebreid eigen rollenmodel. Toegang loopt via standaard Frappe/ERPNext rechten op DocTypes en reports.
+- Write new source text in English.
+- Use `_("Message")` in Python.
+- Use `__("Message")` in JavaScript.
+- Keep DocType labels, report labels and fixture labels in English.
+- Add translations to `translations/<language-code>.csv` for languages that should be supported.
+- Run migrate and clear cache after changing labels or translations.
 
 ---
 
-## Technische bestandsstructuur
+## Limitations And Notes
 
-Belangrijke bestanden en mappen:
+- ERPNext v16 Serial and Batch Bundle is read to find batch information. The app does not maintain a separate serial-number location stock model.
+- Cycle Count adjusts `Batch Location Stock`. Financial inventory corrections must still be handled through ERPNext.
+- `default_putaway_mode` contains Manual, Suggest and Enforce. The current UI mainly uses suggestions and confirmation checks.
+- `auto_create_cross_dock` exists as a setting. Purchase Receipt logic detects cross-dock mainly through manual fields or existing PO/SO links.
+- Without active Storage Locations per warehouse, WMS intentionally skips some event actions.
+- The current app does not define a complete custom role model. Access is managed through standard Frappe/ERPNext permissions on DocTypes and reports.
+
+---
+
+## Technical Structure
+
+Important files and folders:
 
 ```text
 frappe_wms/
   hooks.py
   modules.txt
   patches.txt
+  translations/
+    nl.csv
   config/
     desktop.py
   fixtures/
@@ -1320,6 +946,7 @@ frappe_wms/
   patches/
     v1_0/
     v1_1/
+    v1_2/
   wms/
     events/
       delivery_note.py
@@ -1330,17 +957,11 @@ frappe_wms/
       batch_location_movement/
       batch_location_stock/
       location_pick/
-      location_pick_line/
-      location_pick_source/
       storage_location/
       wms_cross_dock/
-      wms_cross_dock_item/
       wms_cycle_count/
-      wms_cycle_count_line/
-      wms_cycle_count_zone/
       wms_putaway_rule/
       wms_qc_check/
-      wms_qc_check_line/
       wms_settings/
       wms_zone/
     report/
@@ -1355,76 +976,23 @@ frappe_wms/
         wms.json
 ```
 
-### Hooks
+---
 
-`hooks.py` bevat:
+## Developer Notes
 
-- app metadata;
-- app home route `/desk/wms`;
-- app screen registration;
-- fixtures;
-- ERPNext document events;
-- client scripts for ERPNext and WMS forms.
+Use these rules for future development:
 
-### Fixtures
-
-Fixtures leveren:
-
-- custom fields op Batch en Purchase Receipt Item;
-- number cards;
-- dashboard chart;
-- dashboard record.
-
-### Patches
-
-Patches zorgen dat bestaande sites worden bijgewerkt zonder handmatige databasecorrecties.
+- Keep source strings in English.
+- Wrap Python UI strings in `_()`.
+- Wrap JavaScript UI strings in `__()`.
+- Write stock mutations through `add_location_qty`, `deduct_location_qty` or `move_location_qty`.
+- Do not directly update `Batch Location Stock.qty` outside controlled migrations.
+- Always write a movement audit.
+- Keep ERPNext stock ledger authoritative.
+- Test with ERPNext v16 Serial and Batch Bundle.
 
 ---
 
-## Ontwikkelnotities
-
-### Naamgeving
-
-Gebruik de documentnamen zoals ze in de app bestaan:
-
-- `WMS`
-- `WMS Zone`
-- `Storage Location`
-- `Batch Location Stock`
-- `Batch Location Movement`
-- `Location Pick`
-- `WMS QC Check`
-- `WMS Cross Dock`
-- `WMS Cycle Count`
-- `WMS Settings`
-
-Vermijd oude of alternatieve workspacenamen. De actieve workspace hoort `WMS` te heten en via `/desk/wms` te openen.
-
-### Data-integriteit
-
-Bij nieuwe functionaliteit:
-
-- Schrijf voorraadmutaties via `add_location_qty`, `deduct_location_qty` of `move_location_qty`.
-- Schrijf geen directe SQL updates op `Batch Location Stock.qty` buiten gecontroleerde migraties.
-- Schrijf altijd een movement audit.
-- Houd ERPNext stock ledger leidend.
-- Test met ERPNext v16 Serial and Batch Bundle.
-
-### UI uitbreidingen
-
-Bestaande client scripts gebruiken Frappe form buttons en whitelisted Python methods. Nieuwe UI-acties kunnen het beste hetzelfde patroon volgen:
-
-```text
-Form button
-  -> frappe.call
-  -> whitelisted method
-  -> server-side validatie
-  -> voorraadhelper
-  -> reload form
-```
-
----
-
-## Licentie
+## License
 
 MIT

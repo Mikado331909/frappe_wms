@@ -38,7 +38,7 @@ class LocationPick(Document):
         for row in self.get("pick_lists", []):
             if row.pick_list in seen:
                 frappe.throw(
-                    _("Pick List {0} is meer dan één keer toegevoegd.").format(row.pick_list)
+                    _("Pick List {0} was added more than once.").format(row.pick_list)
                 )
             seen.add(row.pick_list)
 
@@ -48,13 +48,13 @@ class LocationPick(Document):
                 continue
             if line.picked_qty < 0:
                 frappe.throw(
-                    _("Rij {0}: Gepickte hoeveelheid mag niet negatief zijn.").format(line.idx)
+                    _("Row {0}: Picked quantity cannot be negative.").format(line.idx)
                 )
             if line.picked_qty > line.required_qty + 0.001:
                 frappe.throw(
                     _(
-                        "Rij {0}: Gepickte hoeveelheid {1} overschrijdt "
-                        "vereiste hoeveelheid {2} voor item {3}."
+                        "Row {0}: Picked quantity {1} exceeds "
+                        "required quantity {2} for item {3}."
                     ).format(
                         line.idx,
                         frappe.utils.flt(line.picked_qty, 3),
@@ -83,8 +83,8 @@ class LocationPick(Document):
             if frappe.utils.flt(available) < line.picked_qty - 0.001:
                 frappe.throw(
                     _(
-                        "Rij {0}: Onvoldoende voorraad op {1}. "
-                        "Beschikbaar: {2}, Gepickt: {3} voor item {4} batch {5}."
+                        "Row {0}: Insufficient stock on {1}. "
+                        "Available: {2}, Picked: {3} for item {4} batch {5}."
                     ).format(
                         line.idx,
                         line.source_location,
@@ -145,13 +145,13 @@ class LocationPick(Document):
 
 
 # ----------------------------------------------------------------------
-# Whitelisted API — called from the Pick List client button
+# Whitelisted API - called from the Pick List client button
 # ----------------------------------------------------------------------
 
 
 @frappe.whitelist()
 def get_open_location_picks():
-    """Geef lijst van open (niet-ingediende) Location Pick documenten."""
+    """Return open, not submitted Location Pick documents."""
     return frappe.get_all(
         "Location Pick",
         filters={"docstatus": 0},
@@ -164,13 +164,13 @@ def get_open_location_picks():
 @frappe.whitelist()
 def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None):
     """
-    Genereer of verleng een Location Pick vanuit één of meerdere ERPNext Pick Lists.
+    Generate or extend a Location Pick from one or more ERPNext Pick Lists.
 
-    pick_lists:       JSON-lijst van Pick List namen, of een enkele naam als string
+    pick_lists:       JSON list of Pick List names, or a single name as a string
     picking_strategy: 'Pick Sequence' / 'FEFO ...' / 'FIFO ...'
-    location_pick:    als opgegeven, voeg regels toe aan deze bestaande Location Pick
+    location_pick:    if given, append lines to this existing Location Pick
     """
-    # Normaliseer naar een Python lijst
+    # Normalize to a Python list
     if isinstance(pick_lists, str):
         try:
             pick_lists = json.loads(pick_lists)
@@ -182,12 +182,12 @@ def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None
 
     order_by = _order_by_for_strategy(picking_strategy)
 
-    # Bestaande Location Pick ophalen of nieuwe aanmaken
+    # Load an existing Location Pick or create a new one
     if location_pick:
         doc = frappe.get_doc("Location Pick", location_pick)
         if doc.docstatus != 0:
             frappe.throw(
-                _("Location Pick {0} is al ingediend en kan niet meer worden gewijzigd.").format(
+                _("Location Pick {0} is already submitted and cannot be changed.").format(
                     location_pick
                 )
             )
@@ -197,14 +197,14 @@ def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None
         doc.posting_date = today()
         doc.status = "Open"
 
-    # Pick Lists die al aan dit document gekoppeld zijn
+    # Pick Lists already linked to this document
     existing_pick_lists = {row.pick_list for row in doc.get("pick_lists", [])}
     new_lines_added = 0
 
     for pl_name in pick_lists:
         if pl_name in existing_pick_lists:
             frappe.msgprint(
-                _("Pick List {0} is al toegevoegd aan deze Location Pick.").format(pl_name)
+                _("Pick List {0} is already added to this Location Pick.").format(pl_name)
             )
             continue
 
@@ -216,7 +216,7 @@ def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None
             if not batch_no:
                 continue
 
-            # Hoeveel is al ingepland door andere (niet-geannuleerde) Location Picks?
+            # Qty already committed by other non-cancelled Location Picks
             wms_committed = frappe.utils.flt(
                 frappe.db.sql("""
                     SELECT COALESCE(SUM(lpl.required_qty), 0)
@@ -230,8 +230,8 @@ def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None
             if required_qty <= 0.001:
                 continue
 
-            # Beschikbare Storage locaties voor dit item/batch/warehouse
-            # Ondersteunt zowel oud ('Storage') als nieuw ('Active Storage') locatietype
+            # Available storage locations for this item, batch and warehouse
+            # Supports both old ('Storage') and new ('Active Storage') location types
             available_rows = frappe.db.sql(
                 f"""
                 SELECT bls.name, bls.qty, bls.storage_location,
@@ -280,14 +280,14 @@ def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None
 
     if not doc.items and not location_pick:
         frappe.throw(
-            _("Geen pickbare locatievoorraad gevonden voor de opgegeven Pick Lists.")
+            _("No pickable location stock found for the given Pick Lists.")
         )
 
     if new_lines_added == 0 and location_pick:
         frappe.throw(
             _(
-                "Geen nieuwe regels toegevoegd — alle items zijn al ingepland "
-                "of er is geen voorraad op opslaglocaties."
+                "No new lines added - all items are already planned "
+                "or there is no stock on storage locations."
             )
         )
 
@@ -300,13 +300,13 @@ def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None
 
 
 # ----------------------------------------------------------------------
-# Whitelisted API — called from location_pick.js after submit
+# Whitelisted API - called from location_pick.js after submit
 # ----------------------------------------------------------------------
 
 
 @frappe.whitelist()
 def get_pick_qty_discrepancies(location_pick):
-    """Vergelijk WMS gepickte hoeveelheid met ERPNext Pick List picked_qty per regel."""
+    """Compare WMS picked qty with ERPNext Pick List picked_qty per line."""
     doc = frappe.get_doc("Location Pick", location_pick)
     discrepancies = []
 

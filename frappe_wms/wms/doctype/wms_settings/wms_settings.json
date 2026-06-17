@@ -18,39 +18,39 @@
   {
    "fieldname": "section_inbound",
    "fieldtype": "Section Break",
-   "label": "Inbound Instellingen"
+   "label": "Inbound Settings"
   },
   {
    "fieldname": "auto_create_on_receipt",
    "fieldtype": "Check",
-   "label": "Auto-create Location Stock bij Purchase Receipt",
+   "label": "Auto-create Location Stock on Purchase Receipt",
    "default": "1",
-   "description": "Bij indienen van een Purchase Receipt wordt automatisch WMS locatievoorraad aangemaakt."
+   "description": "Automatically creates WMS location stock when submitting a Purchase Receipt."
   },
   {
    "fieldname": "validate_against_erpnext",
    "fieldtype": "Check",
-   "label": "Valideer WMS Voorraad tegen ERPNext Stock",
+   "label": "Validate WMS Stock against ERPNext Stock",
    "default": "1",
-   "description": "Weigert WMS-wijzigingen als de totale locatiehoeveelheid de ERPNext SLE-hoeveelheid overschrijdt."
+   "description": "Rejects WMS changes if total location quantity exceeds ERPNext SLE quantity."
   },
   {
    "fieldname": "section_putaway",
    "fieldtype": "Section Break",
-   "label": "Putaway Instellingen"
+   "label": "Putaway Settings"
   },
   {
    "fieldname": "default_putaway_mode",
    "fieldtype": "Select",
-   "label": "Putaway Modus",
+   "label": "Putaway Mode",
    "options": "Manual\nSuggest\nEnforce",
    "default": "Suggest",
-   "description": "Manual: geen suggestie. Suggest: systeem toont aanbevolen locatie. Enforce: medewerker moet afwijking verklaren."
+   "description": "Manual: no suggestion. Suggest: system shows a recommended location. Enforce: user must explain deviations."
   },
   {
    "fieldname": "section_qc",
    "fieldtype": "Section Break",
-   "label": "QC Instellingen"
+   "label": "QC Settings"
   },
   {
    "fieldname": "qc_trigger",
@@ -58,19 +58,19 @@
    "label": "QC Trigger",
    "options": "Per Receipt Line\nNever",
    "default": "Per Receipt Line",
-   "description": "Per Receipt Line: medewerker vlagt per PR-regel of QC nodig is. Never: nooit automatisch."
+   "description": "Per Receipt Line: user flags per PR line whether QC is needed. Never: never automatic."
   },
   {
    "fieldname": "section_crossdock",
    "fieldtype": "Section Break",
-   "label": "Cross-dock Instellingen"
+   "label": "Cross-dock Settings"
   },
   {
    "fieldname": "auto_create_cross_dock",
    "fieldtype": "Check",
-   "label": "Auto-detecteer Cross-dock via PO → SO koppeling",
+   "label": "Auto-detect Cross-dock via PO to SO link",
    "default": "1",
-   "description": "Detecteert automatisch cross-dock wanneer een Purchase Order gekoppeld is aan een Sales Order."
+   "description": "Automatically detects cross-dock when a Purchase Order is linked to a Sales Order."
   }
  ],
  "issingle": 1,

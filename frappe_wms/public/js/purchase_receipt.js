@@ -1,4 +1,4 @@
-// Cross-dock en QC veld handlers voor Purchase Receipt Item
+// Cross-dock and QC field handlers for Purchase Receipt Item
 
 frappe.ui.form.on('Purchase Receipt Item', {
 	wms_cross_dock(frm, cdt, cdn) {
@@ -10,8 +10,8 @@ frappe.ui.form.on('Purchase Receipt Item', {
 		const customer = row.wms_customer;
 		if (!customer) {
 			frappe.msgprint({
-				title: __('Klant vereist'),
-				message: __('Vul eerst het veld "Customer (WMS)" in voordat je cross-dock activeert.'),
+				title: __('Customer Required'),
+				message: __('Fill in the "Customer (WMS)" field before enabling cross-dock.'),
 				indicator: 'orange',
 			});
 			frappe.model.set_value(cdt, cdn, 'wms_cross_dock', 0);
@@ -29,8 +29,8 @@ function _suggest_cross_dock_so(frm, cdt, cdn, customer, item_code) {
 			const orders = r.message || [];
 			if (!orders.length) {
 				frappe.msgprint({
-					title: __('Geen Sales Orders'),
-					message: __('Geen open Sales Orders gevonden voor klant {0}.', [customer]),
+					title: __('No Sales Orders'),
+					message: __('No open Sales Orders found for customer {0}.', [customer]),
 					indicator: 'orange',
 				});
 				return;
@@ -38,14 +38,14 @@ function _suggest_cross_dock_so(frm, cdt, cdn, customer, item_code) {
 			if (orders.length === 1) {
 				frappe.model.set_value(cdt, cdn, 'wms_cross_dock_so', orders[0].name);
 				frappe.show_alert({
-					message: __('Sales Order {0} automatisch ingevuld.', [orders[0].name]),
+					message: __('Sales Order {0} filled automatically.', [orders[0].name]),
 					indicator: 'green',
 				});
 				return;
 			}
-			// Meerdere SOs — toon keuzedialoog
+			// Multiple Sales Orders - show a selection dialog
 			new frappe.ui.Dialog({
-				title: __('Selecteer Sales Order voor Cross-dock'),
+				title: __('Select Sales Order for Cross-dock'),
 				fields: [
 					{
 						label: __('Sales Order'),
@@ -65,7 +65,7 @@ function _suggest_cross_dock_so(frm, cdt, cdn, customer, item_code) {
 						description: __('Open orders: {0}', [orders.map(o => o.name).join(', ')]),
 					},
 				],
-				primary_action_label: __('Selecteren'),
+				primary_action_label: __('Select'),
 				primary_action(values) {
 					frappe.model.set_value(cdt, cdn, 'wms_cross_dock_so', values.sales_order);
 					this.hide();

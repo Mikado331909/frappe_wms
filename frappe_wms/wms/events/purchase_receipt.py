@@ -12,7 +12,7 @@ from frappe_wms.wms.events.utils import (
 
 
 def _set_customer_on_batch(batch_no, customer):
-    """Schrijf de klant naar het Batch record als die er nog niet op staat."""
+    """Write the customer to the Batch record if it is still empty."""
     if not batch_no or not customer:
         return
     existing = frappe.db.get_value("Batch", batch_no, "customer")
@@ -22,16 +22,16 @@ def _set_customer_on_batch(batch_no, customer):
 
 def _get_cross_dock_so(item):
     """
-    Geeft de gekoppelde Sales Order voor cross-dock terug, of None.
-    Controleert:
-    1. Handmatige vlag wms_cross_dock + wms_cross_dock_so
-    2. Auto-detectie via PO Detail → Sales Order koppeling
+    Return the linked Sales Order for cross-dock, or None.
+    Checks:
+    1. Manual wms_cross_dock + wms_cross_dock_so flag
+    2. Auto-detection through the PO Detail to Sales Order link
     """
     if item.get("wms_cross_dock"):
         so = item.get("wms_cross_dock_so") or None
         return so if so else True  # True = cross-dock maar geen SO opgegeven
 
-    # Auto-detectie: Purchase Order Item → Sales Order
+    # Auto-detection: Purchase Order Item to Sales Order
     if item.get("sales_order"):
         return item.sales_order
 
@@ -45,8 +45,8 @@ def _get_cross_dock_so(item):
 
 
 def _create_qc_check(doc, qc_items):
-    """Maak een WMS QC Check document aan voor de opgegeven items."""
-    # Groepeer op warehouse
+    """Create a WMS QC Check document for the given items."""
+    # Group by warehouse
     by_warehouse = {}
     for item in qc_items:
         wh = item["warehouse"]
@@ -57,7 +57,7 @@ def _create_qc_check(doc, qc_items):
             "doctype": "WMS QC Check",
             "purchase_receipt": doc.name,
             "warehouse": warehouse,
-            "check_type": "Beide",
+            "check_type": "Both",
             "status": "Pending",
             "check_date": today(),
             "items": [
@@ -75,17 +75,17 @@ def _create_qc_check(doc, qc_items):
         qc.flags.ignore_permissions = True
         qc.insert()
         frappe.msgprint(
-            _("WMS QC Check {0} aangemaakt voor warehouse {1}.").format(
+            _("WMS QC Check {0} created for warehouse {1}.").format(
                 f'<a href="/app/wms-qc-check/{qc.name}">{qc.name}</a>', warehouse
             ),
-            title=_("QC Vereist"),
+            title=_("QC Required"),
             indicator="orange",
         )
 
 
 def _create_cross_dock(doc, xdock_items):
-    """Maak een WMS Cross Dock document aan voor de opgegeven items."""
-    # Groepeer op klant
+    """Create a WMS Cross Dock document for the given items."""
+    # Group by customer
     by_customer = {}
     for item in xdock_items:
         cust = item.get("customer") or ""
@@ -116,7 +116,7 @@ def _create_cross_dock(doc, xdock_items):
         xd.flags.ignore_permissions = True
         xd.insert()
         frappe.msgprint(
-            _("WMS Cross Dock {0} aangemaakt.").format(
+            _("WMS Cross Dock {0} created.").format(
                 f'<a href="/app/wms-cross-dock/{xd.name}">{xd.name}</a>'
             ),
             title=_("Cross-dock"),
@@ -144,7 +144,7 @@ def on_submit(doc, method=None):
             _set_customer_on_batch(batch_no, customer)
 
             if cross_dock_so:
-                # Cross-dock: stuur naar XDOCK locatie
+                # Cross-dock: send to XDOCK location
                 xdock_loc = get_cross_dock_location(warehouse, raise_if_missing=False)
                 if xdock_loc:
                     add_location_qty(
@@ -171,7 +171,7 @@ def on_submit(doc, method=None):
                     continue
 
             if require_qc:
-                # QC vereist: stuur naar QC Hold locatie
+                # QC required: send to QC Hold location
                 qc_loc = get_qc_hold_location(warehouse, raise_if_missing=False)
                 if qc_loc:
                     add_location_qty(
@@ -195,7 +195,7 @@ def on_submit(doc, method=None):
                     })
                     continue
 
-            # Normaal: naar RECV
+            # Normal flow: send to RECV
             receiving_loc = get_receiving_location(warehouse, raise_if_missing=False)
             if not receiving_loc:
                 continue
@@ -230,7 +230,7 @@ def on_cancel(doc, method=None):
         require_qc = item.get("wms_require_qc") or 0
         cross_dock_so = _get_cross_dock_so(item)
 
-        # Bepaal de locatie waar items geplaatst zijn
+        # Determine the location where items were placed
         if cross_dock_so:
             loc = get_cross_dock_location(warehouse, raise_if_missing=False)
         elif require_qc:
@@ -242,7 +242,7 @@ def on_cancel(doc, method=None):
             continue
 
         for batch_no, qty in iter_batch_entries(item):
-            # Controleer hoeveel er nog op de verwachte locatie staat
+            # Check how much is still available on the expected location
             available = (
                 frappe.db.get_value(
                     "Batch Location Stock",
@@ -274,7 +274,7 @@ def on_cancel(doc, method=None):
 
 @frappe.whitelist()
 def get_open_sales_orders(customer, item_code=None):
-    """Geef open Sales Orders terug voor een klant (optioneel gefilterd op artikel)."""
+    """Return open Sales Orders for a customer, optionally filtered by item."""
     filters = {
         "customer": customer,
         "docstatus": 1,

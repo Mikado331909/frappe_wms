@@ -22,7 +22,7 @@ from frappe.utils import nowdate, nowtime, flt
 
 
 # ---------------------------------------------------------------------------
-# Locatietypes waar klant-segregatie NIET geldt (transit zones)
+# Location types where customer segregation is not enforced (transit zones)
 # ---------------------------------------------------------------------------
 
 _TRANSIT_LOCATION_TYPES = frozenset({
@@ -77,7 +77,7 @@ def _get_location_by_type(warehouse, location_type, raise_if_missing=True):
     )
     if not loc and raise_if_missing:
         frappe.throw(
-            _("Geen actieve {0} locatie gevonden voor warehouse {1}.").format(
+            _("No active {0} location found for warehouse {1}.").format(
                 location_type, warehouse
             )
         )
@@ -89,13 +89,13 @@ def get_receiving_location(warehouse, raise_if_missing=True):
 
 
 def get_picking_staging_location(warehouse, raise_if_missing=True):
-    # Ondersteunt zowel oude ("Picking Staging") als nieuwe ("Outbound Staging") naam
+    # Supports both the old ("Picking Staging") and new ("Outbound Staging") name
     loc = _get_location_by_type(warehouse, "Picking Staging", raise_if_missing=False)
     if not loc:
         loc = _get_location_by_type(warehouse, "Outbound Staging", raise_if_missing=False)
     if not loc and raise_if_missing:
         frappe.throw(
-            _("Geen actieve Picking Staging / Outbound Staging locatie gevonden voor warehouse {0}.").format(warehouse)
+            _("No active Picking Staging / Outbound Staging location found for warehouse {0}.").format(warehouse)
         )
     return loc
 
@@ -121,16 +121,16 @@ def get_production_staging_location(warehouse, raise_if_missing=True):
 
 
 # ---------------------------------------------------------------------------
-# Putaway Rule evaluatie
+# Putaway Rule evaluation
 # ---------------------------------------------------------------------------
 
 
 def evaluate_putaway_rule(warehouse, customer, item_code=None):
     """
-    Evalueer putaway regels en geef beste zone + locatie suggestie terug.
+    Evaluate putaway rules and return the best zone and location suggestion.
 
     Returns:
-        dict {"zone": ..., "location": ..., "reason": ...}  of  None
+        dict {"zone": ..., "location": ..., "reason": ...} or None
     """
     rules = frappe.db.get_all(
         "WMS Putaway Rule",
@@ -142,7 +142,7 @@ def evaluate_putaway_rule(warehouse, customer, item_code=None):
     item_group = frappe.db.get_value("Item", item_code, "item_group") if item_code else None
 
     for rule in rules:
-        # Warehouse filter (leeg = geldt voor alle warehouses)
+        # Warehouse filter (empty means all warehouses)
         if rule.warehouse and rule.warehouse != warehouse:
             continue
         # Customer filter
@@ -152,14 +152,14 @@ def evaluate_putaway_rule(warehouse, customer, item_code=None):
         if rule.item_group and rule.item_group != (item_group or ""):
             continue
 
-        # Regel komt overeen — zoek beste locatie in de doelzone
+        # Rule matches - find the best location in the target zone
         location = _find_best_location_in_zone(rule.target_zone, customer)
         if location:
             return {
                 "zone": rule.target_zone,
                 "location": location,
-                "reason": _("Putaway Rule: {0} → zone {1}").format(
-                    ("klant " + customer) if customer else "eigen voorraad",
+                "reason": _("Putaway Rule: {0} -> zone {1}").format(
+                    ("customer " + customer) if customer else "company stock",
                     rule.target_zone,
                 ),
             }
@@ -169,11 +169,11 @@ def evaluate_putaway_rule(warehouse, customer, item_code=None):
 
 def _find_best_location_in_zone(zone, customer):
     """
-    Zoek de beste locatie in een zone.
-    Voorkeur: locaties die al voorraad van dezelfde klant hebben (consolidatie).
-    Daarna: lege actieve locaties in de zone.
+    Find the best location in a zone.
+    Prefer locations that already contain stock for the same customer.
+    Then use empty active locations in the zone.
     """
-    # 1. Consolidatie: locatie met dezelfde klant
+    # 1. Consolidation: location with the same customer
     consolidation = frappe.db.sql("""
         SELECT DISTINCT bls.storage_location
         FROM `tabBatch Location Stock` bls
@@ -190,7 +190,7 @@ def _find_best_location_in_zone(zone, customer):
     if consolidation:
         return consolidation[0][0]
 
-    # 2. Lege locatie in de zone
+    # 2. Empty location in the zone
     empty = frappe.db.sql("""
         SELECT sl.name
         FROM `tabStorage Location` sl
@@ -209,7 +209,7 @@ def _find_best_location_in_zone(zone, customer):
 
 
 # ---------------------------------------------------------------------------
-# Klant-validatie
+# Customer validation
 # ---------------------------------------------------------------------------
 
 
@@ -222,12 +222,12 @@ def _get_customer_for_batch(batch_no):
 
 def _validate_customer_on_location(storage_location, customer):
     """
-    Blokkeer toevoegen aan een opslaglocatie die al voorraad van een andere klant heeft.
-    Transit-locaties (QC Hold, Inspection, etc.) worden overgeslagen.
+    Block adding stock to a storage location that already contains another customer.
+    Transit locations (QC Hold, Inspection, etc.) are skipped.
     """
     loc_type = frappe.db.get_value("Storage Location", storage_location, "location_type") or ""
     if loc_type in _TRANSIT_LOCATION_TYPES:
-        return  # Transit zones hoeven niet gesegregeerd te zijn
+        return  # Transit zones do not need customer segregation
 
     existing_rows = frappe.db.get_all(
         "Batch Location Stock",
@@ -243,12 +243,12 @@ def _validate_customer_on_location(storage_location, customer):
         if existing_customer != customer:
             frappe.throw(
                 _(
-                    "Locatie {0} bevat al voorraad van {1}. "
-                    "Kies een andere locatie voor {2}."
+                    "Location {0} already contains stock for {1}. "
+                    "Choose another location for {2}."
                 ).format(
                     storage_location,
-                    ("klant " + existing_customer) if existing_customer else "eigen voorraad",
-                    ("klant " + customer) if customer else "eigen voorraad",
+                    ("customer " + existing_customer) if existing_customer else "company stock",
+                    ("customer " + customer) if customer else "company stock",
                 )
             )
 
@@ -338,8 +338,8 @@ def deduct_location_qty(
     if not existing:
         frappe.throw(
             _(
-                "Geen Batch Location Stock gevonden voor Item {0}, Batch {1}, "
-                "Warehouse {2}, Locatie {3}."
+                "No Batch Location Stock found for Item {0}, Batch {1}, "
+                "Warehouse {2}, Location {3}."
             ).format(item_code, batch_no, warehouse, storage_location)
         )
 
@@ -347,7 +347,7 @@ def deduct_location_qty(
     if new_qty < -0.001:
         frappe.throw(
             _(
-                "Kan {0} niet aftrekken van locatie {1}: slechts {2} beschikbaar "
+                "Cannot deduct {0} from location {1}: only {2} available "
                 "voor Item {3} Batch {4}."
             ).format(
                 flt(qty, 3), storage_location, flt(existing.qty, 3), item_code, batch_no,
@@ -395,14 +395,14 @@ def move_location_qty(
     )
     if not src:
         frappe.throw(
-            _("Geen voorraad op locatie {0} voor Item {1} Batch {2}.").format(
+            _("No stock on location {0} for Item {1} Batch {2}.").format(
                 from_location, item_code, batch_no
             )
         )
     if flt(src.qty) < qty - 0.001:
         frappe.throw(
             _(
-                "Onvoldoende voorraad op {0}: beschikbaar {1}, gevraagd {2} "
+                "Insufficient stock on {0}: available {1}, requested {2} "
                 "voor Item {3} Batch {4}."
             ).format(from_location, flt(src.qty, 3), flt(qty, 3), item_code, batch_no)
         )

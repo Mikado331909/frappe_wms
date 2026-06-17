@@ -1,8 +1,9 @@
 """
-Zone Occupancy rapport — bezettingsgraad per zone.
-Toont voor elke zone: huidige voorraad, capaciteit en bezetting %.
+Zone Occupancy report - occupancy rate per zone.
+Shows current stock, capacity and occupancy percentage for each zone.
 """
 import frappe
+from frappe import _
 from frappe.utils import flt
 
 
@@ -13,16 +14,16 @@ def execute(filters=None):
 
 def _columns():
     return [
-        {"label": "Zone", "fieldname": "zone", "fieldtype": "Link", "options": "WMS Zone", "width": 130},
-        {"label": "Zone Naam", "fieldname": "zone_name", "fieldtype": "Data", "width": 160},
-        {"label": "Warehouse", "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 150},
-        {"label": "Zone Type", "fieldname": "zone_type", "fieldtype": "Data", "width": 140},
-        {"label": "Klant", "fieldname": "dedicated_customer", "fieldtype": "Link", "options": "Customer", "width": 130},
-        {"label": "Actieve Locaties", "fieldname": "active_locations", "fieldtype": "Int", "width": 110},
-        {"label": "Bezette Locaties", "fieldname": "occupied_locations", "fieldtype": "Int", "width": 110},
-        {"label": "Totale Capaciteit", "fieldname": "total_capacity", "fieldtype": "Float", "width": 120},
-        {"label": "Huidige Voorraad", "fieldname": "current_stock", "fieldtype": "Float", "width": 120},
-        {"label": "Bezetting %", "fieldname": "occupancy_pct", "fieldtype": "Percent", "width": 100},
+        {"label": _("Zone"), "fieldname": "zone", "fieldtype": "Link", "options": "WMS Zone", "width": 130},
+        {"label": _("Zone Name"), "fieldname": "zone_name", "fieldtype": "Data", "width": 160},
+        {"label": _("Warehouse"), "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 150},
+        {"label": _("Zone Type"), "fieldname": "zone_type", "fieldtype": "Data", "width": 140},
+        {"label": _("Customer"), "fieldname": "dedicated_customer", "fieldtype": "Link", "options": "Customer", "width": 130},
+        {"label": _("Active Locations"), "fieldname": "active_locations", "fieldtype": "Int", "width": 110},
+        {"label": _("Occupied Locations"), "fieldname": "occupied_locations", "fieldtype": "Int", "width": 110},
+        {"label": _("Total Capacity"), "fieldname": "total_capacity", "fieldtype": "Float", "width": 120},
+        {"label": _("Current Stock"), "fieldname": "current_stock", "fieldtype": "Float", "width": 120},
+        {"label": _("Occupancy %"), "fieldname": "occupancy_pct", "fieldtype": "Percent", "width": 100},
     ]
 
 

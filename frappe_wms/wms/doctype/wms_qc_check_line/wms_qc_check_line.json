@@ -20,7 +20,7 @@
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Artikel",
+   "label": "Item",
    "options": "Item",
    "read_only": 1,
    "reqd": 1
@@ -30,7 +30,7 @@
    "fieldtype": "Data",
    "fetch_from": "item_code.item_name",
    "in_list_view": 1,
-   "label": "Artikelnaam",
+   "label": "Item Name",
    "read_only": 1
   },
   {
@@ -45,7 +45,7 @@
   {
    "fieldname": "from_location",
    "fieldtype": "Link",
-   "label": "QC Locatie",
+   "label": "QC Location",
    "options": "Storage Location",
    "read_only": 1
   },
@@ -53,7 +53,7 @@
    "fieldname": "received_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Ontvangen Hoeveelheid",
+   "label": "Received Qty",
    "read_only": 1,
    "reqd": 1
   },
@@ -61,7 +61,7 @@
    "fieldname": "approved_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Goedgekeurd",
+   "label": "Approved",
    "reqd": 1,
    "default": "0"
   },
@@ -69,20 +69,20 @@
    "fieldname": "rejected_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Afgekeurd",
+   "label": "Rejected",
    "default": "0"
   },
   {
    "fieldname": "outcome",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Uitkomst",
-   "options": "\nGoedgekeurd\nAfgekeurd\nGedeeltelijk"
+   "label": "Outcome",
+   "options": "\nApproved\nRejected\nPartial"
   },
   {
    "fieldname": "quality_remarks",
    "fieldtype": "Small Text",
-   "label": "Opmerkingen"
+   "label": "Remarks"
   }
  ],
  "istable": 1,

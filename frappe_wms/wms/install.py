@@ -138,7 +138,7 @@ def fix_wms_workspace():
     except Exception as e:
         result["sidebar_error"] = str(e)
 
-    result["message"] = "Done – now do Ctrl+Shift+R to reload the desk"
+    result["message"] = "Done - now do Ctrl+Shift+R to reload the desk"
     return result
 
 

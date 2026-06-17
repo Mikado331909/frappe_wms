@@ -38,7 +38,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Klant",
+   "label": "Customer",
    "options": "Customer"
   },
   {
@@ -57,7 +57,7 @@
   {
    "fieldname": "posting_date",
    "fieldtype": "Date",
-   "label": "Datum",
+   "label": "Date",
    "reqd": 1
   },
   {
@@ -75,12 +75,12 @@
   {
    "fieldname": "section_notes",
    "fieldtype": "Section Break",
-   "label": "Notities"
+   "label": "Notes"
   },
   {
    "fieldname": "notes",
    "fieldtype": "Small Text",
-   "label": "Notities"
+   "label": "Notes"
   }
  ],
  "links": [],

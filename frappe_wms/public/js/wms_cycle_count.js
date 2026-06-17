@@ -5,11 +5,11 @@ frappe.ui.form.on('WMS Cycle Count', {
 		const has_lines = frm.doc.count_lines && frm.doc.count_lines.length > 0;
 
 		if (!has_lines) {
-			frm.add_custom_button(__('Telregels Genereren'), function () {
+			frm.add_custom_button(__('Generate Count Lines'), function () {
 				if (!frm.doc.count_zones || !frm.doc.count_zones.length) {
 					frappe.msgprint({
-						title: __('Geen zones'),
-						message: __('Voeg minimaal één zone toe voordat je telregels genereert.'),
+						title: __('No Zones'),
+						message: __('Add at least one zone before generating count lines.'),
 						indicator: 'orange',
 					});
 					return;
@@ -18,11 +18,11 @@ frappe.ui.form.on('WMS Cycle Count', {
 					method: 'frappe_wms.wms.doctype.wms_cycle_count.wms_cycle_count.generate_count_lines',
 					args: { cycle_count: frm.doc.name },
 					freeze: true,
-					freeze_message: __('Telregels genereren...'),
+					freeze_message: __('Generating count lines...'),
 					callback(r) {
 						frm.reload_doc();
 						frappe.show_alert({
-							message: __('<b>{0}</b> telregels aangemaakt.', [r.message || 0]),
+							message: __('<b>{0}</b> count lines created.', [r.message || 0]),
 							indicator: 'green',
 						});
 					},
@@ -32,7 +32,7 @@ frappe.ui.form.on('WMS Cycle Count', {
 
 		if (has_lines) {
 			frm.set_intro(
-				__('Vul de getelde hoeveelheden in per regel. Bij indienen worden afwijkingen automatisch gecorrigeerd in de WMS voorraad.'),
+				__('Enter the counted quantities per line. On submit, differences are corrected automatically in WMS stock.'),
 				'blue'
 			);
 		}

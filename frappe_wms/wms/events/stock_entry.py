@@ -16,7 +16,7 @@ def on_submit(doc, method=None):
 
 
 def _process_source(doc, item):
-    """Verwerk de bronkant van een Stock Entry (aftrekken van staging)."""
+    """Process the source side of a Stock Entry by deducting from staging."""
     s_warehouse = item.s_warehouse
     if not s_warehouse:
         return
@@ -54,17 +54,17 @@ def _process_source(doc, item):
 
 def _process_target(doc, item):
     """
-    Verwerk de doelkant van een Stock Entry.
+    Process the target side of a Stock Entry.
 
-    Routering:
-    - Productie retour (Material Transfer + work_order): → Inspection locatie
-    - Overig (productie output, etc.): → RECV locatie
+    Routing:
+    - Production return (Material Transfer + work_order): to Inspection location
+    - Other flows (production output, etc.): to RECV location
     """
     t_warehouse = item.t_warehouse
     if not t_warehouse:
         return
 
-    # Productie retour = Material Transfer vanuit productie terug naar magazijn
+    # Production return = Material Transfer from production back to warehouse
     is_production_return = (
         doc.purpose in ("Material Transfer",)
         and getattr(doc, "work_order", None)

@@ -29,20 +29,20 @@ _FIELDS = [
         "insert_after": "item_name",
         "in_list_view": 0,
         "description": (
-            "Klant voor wie deze regel wordt ontvangen. "
-            "Wordt overgenomen op de WMS locatievoorraad."
+            "Customer for whom this line is received. "
+            "Copied to WMS location stock."
         ),
     },
     {
         "dt": "Purchase Receipt Item",
         "fieldname": "wms_require_qc",
         "fieldtype": "Check",
-        "label": "QC Vereist",
+        "label": "QC Required",
         "insert_after": "wms_customer",
         "default": "0",
         "description": (
-            "Als aangevinkt: item gaat naar QC Hold locatie "
-            "en er wordt een WMS QC Check aangemaakt."
+            "If checked: the item goes to a QC Hold location "
+            "and a WMS QC Check is created."
         ),
     },
     {
@@ -53,8 +53,8 @@ _FIELDS = [
         "insert_after": "wms_require_qc",
         "default": "0",
         "description": (
-            "Als aangevinkt: item gaat naar Cross-dock Staging locatie "
-            "voor directe doorsluizing."
+            "If checked: the item goes to a Cross-dock Staging location "
+            "for direct flow-through."
         ),
     },
     {
@@ -65,7 +65,7 @@ _FIELDS = [
         "label": "Cross-dock Sales Order",
         "insert_after": "wms_cross_dock",
         "depends_on": "eval:doc.wms_cross_dock == 1",
-        "description": "Gekoppelde Sales Order voor deze cross-dock zending.",
+        "description": "Linked Sales Order for this cross-dock shipment.",
     },
 ]
 

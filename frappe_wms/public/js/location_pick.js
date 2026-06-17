@@ -8,7 +8,7 @@ frappe.ui.form.on('Location Pick', {
             args: { location_pick: frm.doc.name },
             callback: function (r) {
                 if (!r.message || r.message.length === 0) {
-                    // No difference – nothing to do
+                    // No difference - nothing to do
                     return;
                 }
 
@@ -16,35 +16,35 @@ frappe.ui.form.on('Location Pick', {
                 let rows = r.message.map(function (d) {
                     return (
                         '<b>' + d.item_code + '</b>: ' +
-                        __('Pick List toont') + ' <b>' + d.erpnext_qty + '</b>, ' +
-                        __('WMS heeft') + ' <b>' + d.wms_qty + '</b> ' +
-                        __('gepickt van') + ' <b>' + d.pl_qty + '</b>'
+                        __('Pick List shows') + ' <b>' + d.erpnext_qty + '</b>, ' +
+                        __('WMS has') + ' <b>' + d.wms_qty + '</b> ' +
+                        __('picked of') + ' <b>' + d.pl_qty + '</b>'
                     );
                 }).join('<br>');
 
                 frappe.confirm(
-                    __('Er is een verschil in gepickte aantallen:') +
+                    __('There is a difference in picked quantities:') +
                     '<br><br>' + rows + '<br><br>' +
-                    __('Wil je de Pick List bijwerken met de WMS waarden?'),
+                    __('Do you want to update the Pick List with the WMS values?'),
 
-                    // YES – overwrite Pick List picked_qty with WMS actuals
+                    // YES - overwrite Pick List picked_qty with WMS actuals
                     function () {
                         frappe.call({
                             method: 'frappe_wms.wms.doctype.location_pick.location_pick.apply_pick_qty_update',
                             args: { location_pick: frm.doc.name },
                             callback: function () {
                                 frappe.show_alert({
-                                    message: __('Pick List picked_qty bijgewerkt naar WMS waarden'),
+                                    message: __('Pick List picked_qty updated to WMS values'),
                                     indicator: 'green',
                                 });
                             },
                         });
                     },
 
-                    // NO – leave Pick List as-is
+                    // NO - leave Pick List as-is
                     function () {
                         frappe.show_alert({
-                            message: __('Pick List niet gewijzigd'),
+                            message: __('Pick List not changed'),
                             indicator: 'blue',
                         });
                     }

@@ -12,8 +12,8 @@ class WMSCrossDock(Document):
     @frappe.whitelist()
     def mark_ready_to_ship(self):
         """
-        Verplaats alle cross-dock items van XDOCK locatie naar Outbound Staging.
-        Aanroepen via knop op het formulier.
+        Move all cross-dock items from the XDOCK location to Outbound Staging.
+        Called from the form button.
         """
         from frappe_wms.wms.events.utils import (
             get_picking_staging_location,
@@ -29,7 +29,7 @@ class WMSCrossDock(Document):
             if qty_remaining <= 0.001:
                 continue
 
-            # Controleer beschikbare voorraad op XDOCK locatie
+            # Check available stock on the XDOCK location
             available = (
                 frappe.db.get_value(
                     "Batch Location Stock",
@@ -74,11 +74,11 @@ class WMSCrossDock(Document):
         if moved > 0:
             self.db_set("status", "Staged")
             frappe.msgprint(
-                _("{0} eenheden verplaatst naar Outbound Staging.").format(flt(moved, 3)),
+                _("{0} units moved to Outbound Staging.").format(flt(moved, 3)),
                 indicator="green",
             )
         else:
             frappe.msgprint(
-                _("Geen voorraad gevonden op de cross-dock locaties."),
+                _("No stock found on the cross-dock locations."),
                 indicator="orange",
             )

@@ -31,23 +31,23 @@ class WMSQCCheck(Document):
 
             if approved < 0 or rejected < 0:
                 frappe.throw(
-                    _("Rij {0}: Hoeveelheden mogen niet negatief zijn.").format(line.idx)
+                    _("Row {0}: Quantities cannot be negative.").format(line.idx)
                 )
             if approved + rejected > received + 0.001:
                 frappe.throw(
                     _(
-                        "Rij {0}: Goedgekeurd ({1}) + Afgekeurd ({2}) overschrijdt "
-                        "ontvangen hoeveelheid ({3})."
+                        "Row {0}: Approved ({1}) + Rejected ({2}) exceeds "
+                        "received quantity ({3})."
                     ).format(line.idx, flt(approved, 3), flt(rejected, 3), flt(received, 3))
                 )
 
-            # Auto-bereken outcome
+            # Auto-calculate outcome
             if approved > 0 and rejected > 0:
-                line.outcome = "Gedeeltelijk"
+                line.outcome = "Partial"
             elif approved > 0:
-                line.outcome = "Goedgekeurd"
+                line.outcome = "Approved"
             elif rejected > 0:
-                line.outcome = "Afgekeurd"
+                line.outcome = "Rejected"
 
     def _process_qc_results(self):
         from frappe_wms.wms.events.utils import (
@@ -61,7 +61,7 @@ class WMSQCCheck(Document):
             rejected = flt(line.rejected_qty)
 
             if approved > 0.001:
-                # Goedgekeurd: verplaats van QC Hold → RECV (klaar voor putaway)
+                # Approved: move from QC Hold to RECV, ready for putaway
                 recv_loc = get_receiving_location(self.warehouse, raise_if_missing=False)
                 if recv_loc and line.from_location:
                     move_location_qty(
@@ -77,7 +77,7 @@ class WMSQCCheck(Document):
                     )
 
             if rejected > 0.001:
-                # Afgekeurd: verplaats van QC Hold → Quarantine
+                # Rejected: move from QC Hold to Quarantine
                 quar_loc = get_quarantine_location(self.warehouse, raise_if_missing=False)
                 if quar_loc and line.from_location:
                     move_location_qty(
@@ -93,7 +93,7 @@ class WMSQCCheck(Document):
                     )
 
     def _reverse_qc_results(self):
-        """Draai QC resultaten terug: approved ← RECV, rejected ← Quarantine → QC Hold."""
+        """Reverse QC results: approved from RECV and rejected from Quarantine back to QC Hold."""
         from frappe_wms.wms.events.utils import (
             get_receiving_location,
             get_quarantine_location,

@@ -12,7 +12,7 @@ class WMSZone(Document):
         if self.dedicated_customer and self.zone_type != "Active Storage":
             frappe.throw(
                 _(
-                    "Een dedicated klant kan alleen worden ingesteld op zones van het type "
+                    "A dedicated customer can only be set on zones of type "
                     "'Active Storage'. Zone type is nu '{0}'."
                 ).format(self.zone_type)
             )

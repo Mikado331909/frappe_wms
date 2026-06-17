@@ -1,7 +1,8 @@
 """
-Pick Performance rapport — gepickte vs vereiste hoeveelheden per picker per periode.
+Pick Performance report - picked vs required quantities per picker per period.
 """
 import frappe
+from frappe import _
 from frappe.utils import flt
 
 
@@ -12,15 +13,15 @@ def execute(filters=None):
 
 def _columns():
     return [
-        {"label": "Datum", "fieldname": "posting_date", "fieldtype": "Date", "width": 100},
-        {"label": "Location Pick", "fieldname": "location_pick", "fieldtype": "Link", "options": "Location Pick", "width": 160},
-        {"label": "Picker", "fieldname": "picker", "fieldtype": "Link", "options": "User", "width": 150},
-        {"label": "Pick Lists", "fieldname": "pick_lists", "fieldtype": "Data", "width": 200},
-        {"label": "Regels", "fieldname": "line_count", "fieldtype": "Int", "width": 70},
-        {"label": "Vereist", "fieldname": "total_required", "fieldtype": "Float", "width": 90},
-        {"label": "Gepickt", "fieldname": "total_picked", "fieldtype": "Float", "width": 90},
-        {"label": "Volledigheid %", "fieldname": "completeness_pct", "fieldtype": "Percent", "width": 110},
-        {"label": "Afwijkingen", "fieldname": "discrepancies", "fieldtype": "Int", "width": 90},
+        {"label": _("Date"), "fieldname": "posting_date", "fieldtype": "Date", "width": 100},
+        {"label": _("Location Pick"), "fieldname": "location_pick", "fieldtype": "Link", "options": "Location Pick", "width": 160},
+        {"label": _("Picker"), "fieldname": "picker", "fieldtype": "Link", "options": "User", "width": 150},
+        {"label": _("Pick Lists"), "fieldname": "pick_lists", "fieldtype": "Data", "width": 200},
+        {"label": _("Lines"), "fieldname": "line_count", "fieldtype": "Int", "width": 70},
+        {"label": _("Required"), "fieldname": "total_required", "fieldtype": "Float", "width": 90},
+        {"label": _("Picked"), "fieldname": "total_picked", "fieldtype": "Float", "width": 90},
+        {"label": _("Completion %"), "fieldname": "completeness_pct", "fieldtype": "Percent", "width": 110},
+        {"label": _("Discrepancies"), "fieldname": "discrepancies", "fieldtype": "Int", "width": 90},
     ]
 
 
@@ -57,7 +58,7 @@ def _get_data(filters):
         ORDER BY lp.posting_date DESC
     """, values, as_dict=True)
 
-    # Haal pick lists per Location Pick op
+    # Load pick lists per Location Pick
     pick_lists_map = {}
     if picks:
         lp_names = [p.location_pick for p in picks]

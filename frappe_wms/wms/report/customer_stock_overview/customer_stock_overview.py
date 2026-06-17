@@ -1,7 +1,8 @@
 """
-Customer Stock Overview — voorraad per klant per zone per artikel.
+Customer Stock Overview - stock per customer, zone and item.
 """
 import frappe
+from frappe import _
 from frappe.utils import flt
 
 
@@ -12,15 +13,15 @@ def execute(filters=None):
 
 def _columns():
     return [
-        {"label": "Klant", "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 150},
-        {"label": "Zone", "fieldname": "zone", "fieldtype": "Link", "options": "WMS Zone", "width": 120},
-        {"label": "Warehouse", "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 140},
-        {"label": "Artikel", "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 140},
-        {"label": "Artikelnaam", "fieldname": "item_name", "fieldtype": "Data", "width": 180},
-        {"label": "Batch", "fieldname": "batch_no", "fieldtype": "Link", "options": "Batch", "width": 120},
-        {"label": "Locatie", "fieldname": "storage_location", "fieldtype": "Link", "options": "Storage Location", "width": 120},
-        {"label": "Hoeveelheid", "fieldname": "qty", "fieldtype": "Float", "width": 100},
-        {"label": "Eenheid", "fieldname": "uom", "fieldtype": "Link", "options": "UOM", "width": 70},
+        {"label": _("Customer"), "fieldname": "customer", "fieldtype": "Link", "options": "Customer", "width": 150},
+        {"label": _("Zone"), "fieldname": "zone", "fieldtype": "Link", "options": "WMS Zone", "width": 120},
+        {"label": _("Warehouse"), "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 140},
+        {"label": _("Item"), "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 140},
+        {"label": _("Item Name"), "fieldname": "item_name", "fieldtype": "Data", "width": 180},
+        {"label": _("Batch"), "fieldname": "batch_no", "fieldtype": "Link", "options": "Batch", "width": 120},
+        {"label": _("Location"), "fieldname": "storage_location", "fieldtype": "Link", "options": "Storage Location", "width": 120},
+        {"label": _("Quantity"), "fieldname": "qty", "fieldtype": "Float", "width": 100},
+        {"label": _("UOM"), "fieldname": "uom", "fieldtype": "Link", "options": "UOM", "width": 70},
     ]
 
 
@@ -42,7 +43,7 @@ def _get_data(filters):
 
     return frappe.db.sql(f"""
         SELECT
-            COALESCE(bls.customer, '(Eigen voorraad)') AS customer,
+            COALESCE(bls.customer, '(Company Stock)') AS customer,
             bls.zone,
             bls.warehouse,
             bls.item_code,

@@ -34,7 +34,7 @@ def execute():
             "dt": "Purchase Receipt Item",
             "fieldname": "wms_require_qc",
             "fieldtype": "Check",
-            "label": "QC Vereist",
+            "label": "QC Required",
             "insert_after": "wms_customer",
             "default": "0",
         },

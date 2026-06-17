@@ -1,0 +1,138 @@
+"<b>{0}</b> count lines created.","<b>{0}</b> telregels aangemaakt."
+"{0} location(s) corrected.","{0} locatie(s) gecorrigeerd."
+"{0} units moved to Outbound Staging.","{0} eenheden verplaatst naar Outbound Staging."
+Action,Actie
+Active,Actief
+"Active Locations","Actieve locaties"
+"Add at least one zone before generating count lines.","Voeg minimaal een zone toe voordat je telregels genereert."
+"Allocating location stock...","Locatievoorraad alloceren..."
+Approved,Goedgekeurd
+Batch,Batch
+"Batch No",Batchnr.
+Both,Beide
+"Check Date",Controledatum
+"Check Type","Controle type"
+"Completion %","Volledigheid %"
+"Count Date",Teldatum
+"Count Lines",Telregels
+"Counted By","Geteld door"
+"Counted Qty","Getelde hoeveelheid"
+"Cross-dock Location","Cross-dock locatie"
+"Cross-dock Settings","Cross-dock instellingen"
+"Current Stock","Huidige voorraad"
+Customer,Klant
+"Customer Required","Klant vereist"
+"Customer for whom this line is received. Copied to WMS location stock.","Klant voor wie deze regel wordt ontvangen. Wordt overgenomen op de WMS locatievoorraad."
+Date,Datum
+Delivered,Geleverd
+"Difference",Verschil
+Discrepancies,Afwijkingen
+"Do you also want to add","Wil je ook"
+"Do you want to update the Pick List with the WMS values?","Wil je de Pick List bijwerken met de WMS waarden?"
+"Enter the approved and rejected quantities per line. On submit, approved items are moved to RECV and rejected items to Quarantine.","Vul per regel de goedgekeurde en afgekeurde hoeveelheden in. Bij indienen worden goedgekeurde items naar RECV en afgekeurde naar Quarantine verplaatst."
+"Enter the counted quantities per line. On submit, differences are corrected automatically in WMS stock.","Vul de getelde hoeveelheden in per regel. Bij indienen worden afwijkingen automatisch gecorrigeerd in de WMS voorraad."
+"Existing Location Pick","Bestaande Location Pick"
+"ERPNext Qty","ERPNext hoeveelheid"
+"Fill in the ""Customer (WMS)"" field before enabling cross-dock.","Vul eerst het veld ""Customer (WMS)"" in voordat je cross-dock activeert."
+Generate,Genereren
+"Generate Count Lines","Telregels genereren"
+"Generate Location Pick","Location Pick genereren"
+"Generating count lines...","Telregels genereren..."
+"If checked: the item goes to a Cross-dock Staging location for direct flow-through.","Als aangevinkt: item gaat naar Cross-dock Staging locatie voor directe doorsluizing."
+"If checked: the item goes to a QC Hold location and a WMS QC Check is created.","Als aangevinkt: item gaat naar QC Hold locatie en er wordt een WMS QC Check aangemaakt."
+"Inbound Settings","Inbound instellingen"
+Inspector,Controleur
+"Insufficient stock on {0}: available {1}, requested {2} for Item {3} Batch {4}.","Onvoldoende voorraad op {0}: beschikbaar {1}, gevraagd {2} voor Item {3} Batch {4}."
+Item,Artikel
+"Item Code",Artikelcode
+"Item Group",Artikelgroep
+"Item Name",Artikelnaam
+"Linked Sales Order for this cross-dock shipment.","Gekoppelde Sales Order voor deze cross-dock zending."
+"Location {0} already contains stock for {1}. Choose another location for {2}.","Locatie {0} bevat al voorraad van {1}. Kies een andere locatie voor {2}."
+"Location {0} already contains stock for {1}:","Op locatie {0} ligt voor {1} al:"
+"Location {0} has a capacity of {1}. After placement it will contain {2} ({3}%).","Locatie {0} heeft een capaciteit van {1}. Na plaatsing staat er {2} ({3}%)."
+"Location {0} not found.","Locatie {0} niet gevonden."
+Location,Locatie
+"Location Breakdown",Locatieverdeling
+"Location Pick",Locatiepick
+"Location Qty",Locatiehoeveelheid
+Lines,Regels
+Move,Verplaatsen
+"Move Stock","Voorraad verplaatsen"
+"Move all cross-dock items to Outbound Staging?","Verplaats alle cross-dock items naar Outbound Staging?"
+"Movement Count","Aantal bewegingen"
+"Movement Type",Bewegingstype
+"No Sales Orders","Geen Sales Orders"
+"No Zones","Geen zones"
+"No active {0} location found for warehouse {1}.","Geen actieve {0} locatie gevonden voor warehouse {1}."
+"No active Picking Staging / Outbound Staging location found for warehouse {0}.","Geen actieve Picking Staging / Outbound Staging locatie gevonden voor warehouse {0}."
+"No open Location Picks found.","Geen open Location Picks gevonden."
+"No open Sales Orders found for customer {0}.","Geen open Sales Orders gevonden voor klant {0}."
+"No pickable location stock found for the given Pick Lists.","Geen pickbare locatievoorraad gevonden voor de opgegeven Pick Lists."
+"No putaway suggestion available - choose a location manually.","Geen putaway-suggestie beschikbaar - kies handmatig een locatie."
+"No stock found on the cross-dock locations.","Geen voorraad gevonden op de cross-dock locaties."
+"No stock on location {0} for Item {1} Batch {2}.","Geen voorraad op locatie {0} voor Item {1} Batch {2}."
+"Not Allowed","Niet toegestaan"
+Notes,Notities
+"Occupied Locations","Bezette locaties"
+"Occupancy %","Bezetting %"
+Outcome,Uitkomst
+Partial,Gedeeltelijk
+"Pick List {0} is already added to this Location Pick.","Pick List {0} is al toegevoegd aan deze Location Pick."
+"Pick List {0} was added more than once.","Pick List {0} is meer dan een keer toegevoegd."
+"Pick List not changed","Pick List niet gewijzigd"
+"Pick List picked_qty updated to WMS values","Pick List picked_qty bijgewerkt naar WMS waarden"
+"Pick List shows","Pick List toont"
+"Pick List",Picklijst
+"Pick Lists",Picklijsten
+"Picked Qty","Gepickte hoeveelheid"
+"Picking Strategy",Pickstrategie
+Picked,Gepickt
+Picker,Picker
+"Posting Date",Boekingsdatum
+"Putaway Mode","Putaway modus"
+"Putaway Settings","Putaway instellingen"
+"QC Check completed. Approved items were moved to RECV, rejected items to Quarantine.","QC Check afgerond. Goedgekeurde items zijn verplaatst naar RECV, afgekeurde naar Quarantine."
+"QC Lines","QC regels"
+"QC Location","QC locatie"
+"QC Required","QC vereist"
+"QC Settings","QC instellingen"
+Quantity,Kwantiteit
+"Ready to Ship","Gereed voor verzending"
+"Received Qty","Ontvangen hoeveelheid"
+"Recommended: {0} (zone {1}) - {2}","Aanbevolen: {0} (zone {1}) - {2}"
+Rejected,Afgekeurd
+Remarks,Opmerkingen
+Required,Vereist
+"Required Qty","Vereiste hoeveelheid"
+"Row {0}: Picked quantity cannot be negative.","Rij {0}: Gepickte hoeveelheid mag niet negatief zijn."
+"Row {0}: Quantities cannot be negative.","Rij {0}: Hoeveelheden mogen niet negatief zijn."
+"Sales Order {0} filled automatically.","Sales Order {0} automatisch ingevuld."
+Select,Selecteren
+"Select Sales Order for Cross-dock","Selecteer Sales Order voor Cross-dock"
+"Select an existing Location Pick.","Selecteer een bestaande Location Pick."
+"Source Location",Bronlocatie
+Staged,Gestaged
+Start,Starten
+Status,Status
+"System Qty","Systeemhoeveelheid"
+Target,Doel
+"Target Zone",Doelzone
+"The quantity ({2}) exceeds the capacity. Continue anyway?","De hoeveelheid ({2}) overschrijdt de capaciteit. Toch doorgaan?"
+"To Location","Naar locatie"
+"Total Capacity","Totale capaciteit"
+"Total Quantity","Totale hoeveelheid"
+UOM,Eenheid
+Unknown,Onbekend
+"Validate WMS Stock against ERPNext Stock","Valideer WMS voorraad tegen ERPNext voorraad"
+Warehouse,Magazijn
+"WMS Cross Dock {0} created.","WMS Cross Dock {0} aangemaakt."
+"WMS QC Check {0} created for warehouse {1}.","WMS QC Check {0} aangemaakt voor warehouse {1}."
+"WMS has","WMS heeft"
+Zone,Zone
+"Zone Name",Zonenaam
+"Zone Type",Zonetype
+"Zones to Count","Te tellen zones"
+"here?","hier toevoegen?"
+"picked of","gepickt van"
+updated,bijgewerkt

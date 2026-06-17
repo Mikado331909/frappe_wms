@@ -2,7 +2,7 @@ frappe.ui.form.on('WMS QC Check', {
 	refresh(frm) {
 		if (frm.doc.docstatus === 1) {
 			frm.set_intro(
-				__('QC Check afgerond. Goedgekeurde items zijn verplaatst naar RECV, afgekeurde naar Quarantine.'),
+				__('QC Check completed. Approved items were moved to RECV, rejected items to Quarantine.'),
 				'green'
 			);
 			return;
@@ -10,7 +10,7 @@ frappe.ui.form.on('WMS QC Check', {
 
 		if (frm.doc.docstatus === 0) {
 			if (frm.doc.status === 'Pending') {
-				frm.add_custom_button(__('Starten'), function () {
+				frm.add_custom_button(__('Start'), function () {
 					frappe.call({
 						method: 'frappe.client.set_value',
 						args: {
@@ -24,8 +24,8 @@ frappe.ui.form.on('WMS QC Check', {
 			}
 
 			frm.set_intro(
-				__('Vul per regel de goedgekeurde en afgekeurde hoeveelheden in. '
-				   + 'Bij indienen worden goedgekeurde items naar RECV en afgekeurde naar Quarantine verplaatst.'),
+				__('Enter the approved and rejected quantities per line. '
+				   + 'On submit, approved items are moved to RECV and rejected items to Quarantine.'),
 				'blue'
 			);
 		}

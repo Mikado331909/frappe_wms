@@ -13,13 +13,13 @@ frappe.ui.form.on('Pick List', {
 
 						const fields = [
 							{
-								label: __('Picking Strategie'),
+								label: __('Picking Strategy'),
 								fieldname: 'picking_strategy',
 								fieldtype: 'Select',
 								options: [
 									'Pick Sequence',
-									'FEFO – First Expired, First Out',
-									'FIFO – First In, First Out',
+									'FEFO - First Expired, First Out',
+									'FIFO - First In, First Out',
 								],
 								default: 'Pick Sequence',
 								reqd: 1,
@@ -30,7 +30,7 @@ frappe.ui.form.on('Pick List', {
 								),
 							},
 							{
-								label: __('Actie'),
+								label: __('Action'),
 								fieldname: 'action',
 								fieldtype: 'Select',
 								options: [
@@ -41,7 +41,7 @@ frappe.ui.form.on('Pick List', {
 								reqd: 1,
 							},
 							{
-								label: __('Bestaande Location Pick'),
+								label: __('Existing Location Pick'),
 								fieldname: 'existing_location_pick',
 								fieldtype: 'Link',
 								options: 'Location Pick',
@@ -52,18 +52,18 @@ frappe.ui.form.on('Pick List', {
 								},
 								description: open_picks.length
 									? __('Open: {0}', [open_picks.map(p => p.name).join(', ')])
-									: __('Geen open Location Picks gevonden.'),
+									: __('No open Location Picks found.'),
 							},
 						];
 
 						const d = new frappe.ui.Dialog({
 							title: __('Generate Location Pick'),
 							fields: fields,
-							primary_action_label: __('Genereren'),
+							primary_action_label: __('Generate'),
 							primary_action(values) {
 								const adding = values.action === 'Toevoegen aan bestaande Location Pick';
 								if (adding && !values.existing_location_pick) {
-									frappe.msgprint(__('Selecteer een bestaande Location Pick.'));
+									frappe.msgprint(__('Select an existing Location Pick.'));
 									return;
 								}
 								d.hide();
@@ -75,7 +75,7 @@ frappe.ui.form.on('Pick List', {
 										location_pick: adding ? values.existing_location_pick : null,
 									},
 									freeze: true,
-									freeze_message: __('Locatievoorraad alloceren…'),
+									freeze_message: __('Allocating location stock...'),
 									callback(r) {
 										if (r.message) {
 											frappe.show_alert({
@@ -83,7 +83,7 @@ frappe.ui.form.on('Pick List', {
 													'Location Pick {0} {1}.',
 													[
 														`<a href="/app/location-pick/${r.message}">${r.message}</a>`,
-														adding ? __('bijgewerkt') : __('aangemaakt'),
+														adding ? __('updated') : __('created'),
 													]
 												),
 												indicator: 'green',

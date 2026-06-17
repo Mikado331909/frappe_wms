@@ -22,7 +22,7 @@
    "fieldname": "storage_location",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Locatie",
+   "label": "Location",
    "options": "Storage Location",
    "read_only": 1,
    "reqd": 1
@@ -38,7 +38,7 @@
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Artikel",
+   "label": "Item",
    "options": "Item",
    "read_only": 1,
    "reqd": 1
@@ -46,7 +46,7 @@
   {
    "fieldname": "item_name",
    "fieldtype": "Data",
-   "label": "Artikelnaam",
+   "label": "Item Name",
    "read_only": 1
   },
   {
@@ -61,7 +61,7 @@
    "fieldname": "customer",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Klant",
+   "label": "Customer",
    "options": "Customer",
    "read_only": 1
   },
@@ -69,20 +69,20 @@
    "fieldname": "system_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Systeem Hoeveelheid",
+   "label": "System Qty",
    "read_only": 1
   },
   {
    "fieldname": "counted_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Getelde Hoeveelheid"
+   "label": "Counted Qty"
   },
   {
    "fieldname": "difference",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Verschil",
+   "label": "Difference",
    "read_only": 1
   },
   {
@@ -97,7 +97,7 @@
   {
    "fieldname": "remarks",
    "fieldtype": "Small Text",
-   "label": "Opmerkingen"
+   "label": "Remarks"
   }
  ],
  "istable": 1,

@@ -19,10 +19,10 @@
    "fieldname": "priority",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Prioriteit",
+   "label": "Priority",
    "reqd": 1,
    "default": "10",
-   "description": "Lagere waarde = hogere prioriteit. Regels worden op prioriteit gesorteerd."
+   "description": "Lower value = higher priority. Rules are sorted by priority."
   },
   {
    "fieldname": "warehouse",
@@ -31,7 +31,7 @@
    "in_standard_filter": 1,
    "label": "Warehouse",
    "options": "Warehouse",
-   "description": "Leeg = geldt voor alle warehouses"
+   "description": "Blank = applies to all warehouses"
   },
   {
    "fieldname": "col_break_0",
@@ -42,35 +42,35 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Klant",
+   "label": "Customer",
    "options": "Customer",
-   "description": "Leeg = geldt voor alle klanten"
+   "description": "Blank = applies to all customers"
   },
   {
    "fieldname": "item_group",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Artikelgroep",
+   "label": "Item Group",
    "options": "Item Group",
-   "description": "Leeg = geldt voor alle artikelgroepen"
+   "description": "Blank = applies to all item groups"
   },
   {
    "fieldname": "section_target",
    "fieldtype": "Section Break",
-   "label": "Doellocatie"
+   "label": "Target"
   },
   {
    "fieldname": "target_zone",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Doelzone",
+   "label": "Target Zone",
    "options": "WMS Zone",
    "reqd": 1
   },
   {
    "fieldname": "is_active",
    "fieldtype": "Check",
-   "label": "Actief",
+   "label": "Active",
    "default": "1"
   }
  ],

@@ -70,7 +70,7 @@
    "fieldtype": "Float",
    "label": "Max Qty",
    "default": "0",
-   "description": "Maximale hoeveelheid voor deze locatie. 0 = geen limiet."
+   "description": "Maximum quantity for this location. 0 = no limit."
   },
   {
    "fieldname": "is_active",

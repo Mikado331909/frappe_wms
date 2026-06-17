@@ -29,7 +29,7 @@
    "fieldname": "count_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Teldatum",
+   "label": "Count Date",
    "reqd": 1
   },
   {
@@ -57,13 +57,13 @@
   {
    "fieldname": "counted_by",
    "fieldtype": "Link",
-   "label": "Geteld door",
+   "label": "Counted By",
    "options": "User"
   },
   {
    "fieldname": "section_zones",
    "fieldtype": "Section Break",
-   "label": "Te tellen zones"
+   "label": "Zones to Count"
   },
   {
    "fieldname": "count_zones",
@@ -75,12 +75,12 @@
   {
    "fieldname": "section_lines",
    "fieldtype": "Section Break",
-   "label": "Telregels"
+   "label": "Count Lines"
   },
   {
    "fieldname": "count_lines",
    "fieldtype": "Table",
-   "label": "Telregels",
+   "label": "Count Lines",
    "options": "WMS Cycle Count Line"
   }
  ],

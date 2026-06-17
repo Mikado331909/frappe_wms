@@ -48,8 +48,8 @@
    "fieldname": "check_type",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Controle Type",
-   "options": "Kwaliteit\nKwantiteit\nBeide",
+   "label": "Check Type",
+   "options": "Quality\nQuantity\nBoth",
    "reqd": 1
   },
   {
@@ -68,13 +68,13 @@
   {
    "fieldname": "inspector",
    "fieldtype": "Link",
-   "label": "Controleur",
+   "label": "Inspector",
    "options": "User"
   },
   {
    "fieldname": "check_date",
    "fieldtype": "Date",
-   "label": "Controledatum",
+   "label": "Check Date",
    "reqd": 1
   },
   {
@@ -85,19 +85,19 @@
   {
    "fieldname": "items",
    "fieldtype": "Table",
-   "label": "QC Regels",
+   "label": "QC Lines",
    "options": "WMS QC Check Line",
    "reqd": 1
   },
   {
    "fieldname": "section_remarks",
    "fieldtype": "Section Break",
-   "label": "Opmerkingen"
+   "label": "Remarks"
   },
   {
    "fieldname": "remarks",
    "fieldtype": "Small Text",
-   "label": "Opmerkingen"
+   "label": "Remarks"
   }
  ],
  "is_submittable": 1,

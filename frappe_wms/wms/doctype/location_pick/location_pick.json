@@ -56,7 +56,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Picking Strategy",
-   "options": "Pick Sequence\nFEFO – First Expired, First Out\nFIFO – First In, First Out",
+   "options": "Pick Sequence\nFEFO - First Expired, First Out\nFIFO - First In, First Out",
    "default": "Pick Sequence",
    "read_only": 1
   },

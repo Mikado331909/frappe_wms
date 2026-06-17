@@ -26,7 +26,7 @@ class WMSCycleCount(Document):
                 line.status = "Counted"
 
     def _apply_corrections(self):
-        """Past telcorrecties toe op Batch Location Stock."""
+        """Apply count corrections to Batch Location Stock."""
         from frappe_wms.wms.events.utils import (
             add_location_qty,
             deduct_location_qty,
@@ -45,7 +45,7 @@ class WMSCycleCount(Document):
             uom = frappe.db.get_value("Item", line.item_code, "stock_uom") or ""
 
             if diff > 0:
-                # Meer geteld dan in systeem → toevoegen
+                # Counted more than the system quantity - add stock
                 add_location_qty(
                     item_code=line.item_code,
                     batch_no=line.batch_no,
@@ -58,7 +58,7 @@ class WMSCycleCount(Document):
                     movement_type="Cycle Count",
                 )
             else:
-                # Minder geteld dan in systeem → aftrekken
+                # Counted less than the system quantity - deduct stock
                 deduct_location_qty(
                     item_code=line.item_code,
                     batch_no=line.batch_no,
@@ -75,7 +75,7 @@ class WMSCycleCount(Document):
 
         if corrections_applied:
             frappe.msgprint(
-                _("{0} locatie(s) gecorrigeerd.").format(corrections_applied),
+                _("{0} location(s) corrected.").format(corrections_applied),
                 indicator="green",
             )
 
@@ -83,19 +83,19 @@ class WMSCycleCount(Document):
 @frappe.whitelist()
 def generate_count_lines(cycle_count):
     """
-    Genereer telregels vanuit de huidige Batch Location Stock voor de geselecteerde zones.
-    Verwijdert eerst bestaande conceptregels.
+    Generate count lines from current Batch Location Stock for the selected zones.
+    Deletes existing draft lines first.
     """
     doc = frappe.get_doc("WMS Cycle Count", cycle_count)
 
     zones = [row.zone for row in doc.get("count_zones", [])]
     if not zones:
-        frappe.throw(_("Voeg minimaal één zone toe voordat je telregels genereert."))
+        frappe.throw(_("Add at least one zone before generating count lines."))
 
-    # Verwijder bestaande regels
+    # Delete existing lines
     frappe.db.delete("WMS Cycle Count Line", {"parent": cycle_count})
 
-    # Haal alle BLS-records op voor de geselecteerde zones
+    # Load all BLS records for the selected zones
     bls_records = frappe.db.sql(
         """
         SELECT

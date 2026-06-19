@@ -6,7 +6,7 @@
    "label": "Warehouse Movements by Type"
   }
  ],
- "content": "[{\"id\":\"wms_sc1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Location Pick\",\"col\":3}},{\"id\":\"wms_sc2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Batch Location Stock\",\"col\":3}},{\"id\":\"wms_sc3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Storage Location\",\"col\":3}},{\"id\":\"wms_sc4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"WMS Cycle Count\",\"col\":3}},{\"id\":\"wms_header_status\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Operational Status</b></span>\",\"col\":12}},{\"id\":\"wms_nc1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending QC Checks\",\"col\":4}},{\"id\":\"wms_nc2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Cross-dock Pending\",\"col\":4}},{\"id\":\"wms_nc3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Storage Locations\",\"col\":4}},{\"id\":\"wms_chart1\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Warehouse Movements by Type\",\"col\":12}},{\"id\":\"wms_header_ops\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Operations</b></span>\",\"col\":12}},{\"id\":\"wms_card1\",\"type\":\"card\",\"data\":{\"card_name\":\"Operations\",\"col\":4}},{\"id\":\"wms_card2\",\"type\":\"card\",\"data\":{\"card_name\":\"Stock & Locations\",\"col\":4}},{\"id\":\"wms_card3\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"wms_card4\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+ "content": "[{\"id\":\"wms_sc_location_pick\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Location Pick\",\"col\":3}},{\"id\":\"wms_sc_qc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"WMS QC Check\",\"col\":3}},{\"id\":\"wms_sc_cross_dock\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"WMS Cross Dock\",\"col\":3}},{\"id\":\"wms_sc_cycle_count\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"WMS Cycle Count\",\"col\":3}},{\"id\":\"wms_header_status\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Operational Status</b></span>\",\"col\":12}},{\"id\":\"wms_nc_pending_qc\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending QC Checks\",\"col\":4}},{\"id\":\"wms_nc_cross_dock\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Cross-dock Pending\",\"col\":4}},{\"id\":\"wms_nc_locations\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Storage Locations\",\"col\":4}},{\"id\":\"wms_chart_movements\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Warehouse Movements by Type\",\"col\":12}},{\"id\":\"wms_header_operations\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Operations</b></span>\",\"col\":12}},{\"id\":\"wms_card_daily\",\"type\":\"card\",\"data\":{\"card_name\":\"Daily Operations\",\"col\":4}},{\"id\":\"wms_card_quality\",\"type\":\"card\",\"data\":{\"card_name\":\"Quality & Cross-dock\",\"col\":4}},{\"id\":\"wms_card_locations\",\"type\":\"card\",\"data\":{\"card_name\":\"Stock & Locations\",\"col\":4}},{\"id\":\"wms_card_setup\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"wms_card_erpnext\",\"type\":\"card\",\"data\":{\"card_name\":\"ERPNext Stock Flow\",\"col\":4}},{\"id\":\"wms_card_reports\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
  "custom_blocks": [],
  "doctype": "Workspace",
  "extends": null,
@@ -20,37 +20,24 @@
   {
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Daily Operations",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Location Pick",
    "link_count": 0,
    "link_to": "Location Pick",
    "link_type": "DocType",
    "onboard": 1,
-   "parent_label": "Operations",
    "type": "Link"
   },
   {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "WMS QC Check",
-   "link_count": 0,
-   "link_to": "WMS QC Check",
-   "link_type": "DocType",
-   "onboard": 0,
-   "parent_label": "Operations",
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "WMS Cross Dock",
-   "link_count": 0,
-   "link_to": "WMS Cross Dock",
-   "link_type": "DocType",
-   "onboard": 0,
-   "parent_label": "Operations",
-   "type": "Link"
-  },
-  {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
    "label": "WMS Cycle Count",
@@ -58,10 +45,10 @@
    "link_to": "WMS Cycle Count",
    "link_type": "DocType",
    "onboard": 1,
-   "parent_label": "Operations",
    "type": "Link"
   },
   {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
    "label": "Batch Location Movement",
@@ -69,10 +56,48 @@
    "link_to": "Batch Location Movement",
    "link_type": "DocType",
    "onboard": 0,
-   "parent_label": "Operations",
    "type": "Link"
   },
   {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Quality & Cross-dock",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "WMS QC Check",
+   "link_count": 0,
+   "link_to": "WMS QC Check",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "WMS Cross Dock",
+   "link_count": 0,
+   "link_to": "WMS Cross Dock",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock & Locations",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
    "label": "Batch Location Stock",
@@ -80,10 +105,10 @@
    "link_to": "Batch Location Stock",
    "link_type": "DocType",
    "onboard": 1,
-   "parent_label": "Stock & Locations",
    "type": "Link"
   },
   {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
    "label": "Storage Location",
@@ -91,10 +116,10 @@
    "link_to": "Storage Location",
    "link_type": "DocType",
    "onboard": 1,
-   "parent_label": "Stock & Locations",
    "type": "Link"
   },
   {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
    "label": "WMS Zone",
@@ -102,21 +127,40 @@
    "link_to": "WMS Zone",
    "link_type": "DocType",
    "onboard": 0,
-   "parent_label": "Stock & Locations",
+   "type": "Link"
+  },
+  {
+   "dependencies": "Item",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Batch",
+   "link_count": 0,
+   "link_to": "Batch",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Warehouse",
+   "link_count": 0,
+   "link_to": "Warehouse",
+   "link_type": "DocType",
+   "onboard": 0,
    "type": "Link"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "WMS Putaway Rule",
-   "link_count": 0,
-   "link_to": "WMS Putaway Rule",
-   "link_type": "DocType",
+   "label": "Setup",
+   "link_count": 4,
    "onboard": 0,
-   "parent_label": "Setup",
-   "type": "Link"
+   "type": "Card Break"
   },
   {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
    "label": "WMS Settings",
@@ -124,10 +168,103 @@
    "link_to": "WMS Settings",
    "link_type": "DocType",
    "onboard": 0,
-   "parent_label": "Setup",
    "type": "Link"
   },
   {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "WMS Putaway Rule",
+   "link_count": 0,
+   "link_to": "WMS Putaway Rule",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item",
+   "link_count": 0,
+   "link_to": "Item",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Item Group",
+   "link_count": 0,
+   "link_to": "Item Group",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "ERPNext Stock Flow",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "Item, Supplier",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Purchase Receipt",
+   "link_count": 0,
+   "link_to": "Purchase Receipt",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "Item",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Pick List",
+   "link_count": 0,
+   "link_to": "Pick List",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "Item, Customer",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Delivery Note",
+   "link_count": 0,
+   "link_to": "Delivery Note",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "Item",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Stock Entry",
+   "link_count": 0,
+   "link_to": "Stock Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_count": 6,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 1,
    "label": "Location Pick Lines",
@@ -135,10 +272,10 @@
    "link_to": "Location Pick Lines",
    "link_type": "Report",
    "onboard": 0,
-   "parent_label": "Reports",
    "type": "Link"
   },
   {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 1,
    "label": "Location Stock Reconciliation",
@@ -146,10 +283,10 @@
    "link_to": "Location Stock Reconciliation",
    "link_type": "Report",
    "onboard": 0,
-   "parent_label": "Reports",
    "type": "Link"
   },
   {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 1,
    "label": "Zone Occupancy",
@@ -157,10 +294,10 @@
    "link_to": "Zone Occupancy",
    "link_type": "Report",
    "onboard": 0,
-   "parent_label": "Reports",
    "type": "Link"
   },
   {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 1,
    "label": "Customer Stock Overview",
@@ -168,10 +305,10 @@
    "link_to": "Customer Stock Overview",
    "link_type": "Report",
    "onboard": 0,
-   "parent_label": "Reports",
    "type": "Link"
   },
   {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 1,
    "label": "Pick Performance",
@@ -179,10 +316,10 @@
    "link_to": "Pick Performance",
    "link_type": "Report",
    "onboard": 0,
-   "parent_label": "Reports",
    "type": "Link"
   },
   {
+   "dependencies": "",
    "hidden": 0,
    "is_query_report": 1,
    "label": "Inbound Outbound Volume",
@@ -190,7 +327,6 @@
    "link_to": "Inbound Outbound Volume",
    "link_type": "Report",
    "onboard": 0,
-   "parent_label": "Reports",
    "type": "Link"
   }
  ],
@@ -226,15 +362,19 @@
    "type": "DocType"
   },
   {
-   "color": "Green",
-   "label": "Batch Location Stock",
-   "link_to": "Batch Location Stock",
+   "color": "Orange",
+   "format": "{} Pending",
+   "label": "WMS QC Check",
+   "link_to": "WMS QC Check",
+   "stats_filter": "{\"status\": \"Pending\"}",
    "type": "DocType"
   },
   {
-   "color": "Grey",
-   "label": "Storage Location",
-   "link_to": "Storage Location",
+   "color": "Purple",
+   "format": "{} Pending",
+   "label": "WMS Cross Dock",
+   "link_to": "WMS Cross Dock",
+   "stats_filter": "{\"status\": \"Pending\"}",
    "type": "DocType"
   },
   {

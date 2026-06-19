@@ -136,3 +136,35 @@ Zone,Zone
 "here?","hier toevoegen?"
 "picked of","gepickt van"
 updated,bijgewerkt
+"Active Storage Locations","Actieve opslaglocaties"
+"Batch Location Movement","Batchlocatiebeweging"
+"Batch Location Stock","Batchlocatievoorraad"
+"Cross-dock Pending","Cross-dock in behandeling"
+"Customer Stock Overview","Klantvoorraad overzicht"
+"Daily Operations","Dagelijkse bewerkingen"
+"Delivery Note",Leveringsbon
+"ERPNext Stock Flow","ERPNext voorraadstroom"
+"Inbound Outbound Volume","Inkomend/uitgaand volume"
+"Location Pick Lines","Locatiepickregels"
+"Location Stock Reconciliation","Locatievoorraad afstemming"
+Open,Open
+"Operational Status","Operationele status"
+Operations,Bewerkingen
+Pending,"In behandeling"
+"Pending QC Checks","Openstaande QC-controles"
+"Pick Performance",Pickprestaties
+"Purchase Receipt",Inkoopontvangst
+"Quality & Cross-dock","Kwaliteit & cross-dock"
+Reports,Rapporten
+Setup,Instellingen
+"Stock & Locations","Voorraad & locaties"
+"Stock Entry",Voorraadboeking
+"Storage Location",Opslaglocatie
+"WMS Cross Dock","WMS Cross Dock"
+"WMS Cycle Count","WMS cyclustelling"
+"WMS Putaway Rule","WMS putaway-regel"
+"WMS QC Check","WMS QC-controle"
+"WMS Settings","WMS instellingen"
+"WMS Zone","WMS zone"
+"Warehouse Movements by Type","Magazijnbewegingen per type"
+"Zone Occupancy",Zonebezetting

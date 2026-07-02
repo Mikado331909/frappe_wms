@@ -7,18 +7,10 @@ LEGACY_WORKSPACE_NAMES = (
     "Warehouse Management System",
 )
 
-WMS_DASHBOARD_CHART = "Warehouse Movements by Type"
-WMS_NUMBER_CARDS = (
-    "Pending QC Checks",
-    "Cross-dock Pending",
-    "Active Storage Locations",
-)
-
-
 def execute():
     _normalize_wms_workspace()
     _clean_legacy_link_to_values()
-    _ensure_wms_dashboard()
+    _remove_standalone_wms_dashboard()
 
     frappe.db.commit()
     frappe.clear_cache()
@@ -86,44 +78,13 @@ def _clean_legacy_link_to_values():
             )
 
 
-def _ensure_wms_dashboard():
+def _remove_standalone_wms_dashboard():
+    """Keep /desk/wms as the only WMS dashboard-like entry point."""
     if not frappe.db.exists("DocType", "Dashboard"):
         return
 
-    if not frappe.db.exists("Dashboard Chart", WMS_DASHBOARD_CHART):
-        return
-
-    if any(not frappe.db.exists("Number Card", card) for card in WMS_NUMBER_CARDS):
-        return
-
-    dashboard = (
-        frappe.get_doc("Dashboard", "WMS")
-        if frappe.db.exists("Dashboard", "WMS")
-        else frappe.new_doc("Dashboard")
-    )
-
-    dashboard.dashboard_name = "WMS"
-    _set_doc_value_if_field_exists(dashboard, "module", "WMS")
-    _set_doc_value_if_field_exists(dashboard, "is_default", 0)
-    _set_doc_value_if_field_exists(dashboard, "is_standard", 0)
-    _set_doc_value_if_field_exists(dashboard, "chart_options", "{}")
-
-    if dashboard.meta.has_field("charts"):
-        dashboard.set("charts", [])
-        chart_row = {"chart": WMS_DASHBOARD_CHART}
-        if _child_table_has_field(dashboard, "charts", "width"):
-            chart_row["width"] = "Full"
-        dashboard.append("charts", chart_row)
-
-    if dashboard.meta.has_field("cards"):
-        dashboard.set("cards", [])
-        for card in WMS_NUMBER_CARDS:
-            dashboard.append("cards", {"card": card})
-
-    if dashboard.is_new():
-        dashboard.insert(ignore_permissions=True)
-    else:
-        dashboard.save(ignore_permissions=True)
+    if frappe.db.exists("Dashboard", "WMS"):
+        frappe.delete_doc("Dashboard", "WMS", force=True, ignore_permissions=True)
 
 
 def _set_existing_fields(doctype, name, values):
@@ -136,16 +97,3 @@ def _set_existing_fields(doctype, name, values):
 
     if existing_values:
         frappe.db.set_value(doctype, name, existing_values)
-
-
-def _set_doc_value_if_field_exists(doc, fieldname, value):
-    if doc.meta.has_field(fieldname):
-        doc.set(fieldname, value)
-
-
-def _child_table_has_field(doc, table_fieldname, child_fieldname):
-    table_field = doc.meta.get_field(table_fieldname)
-    if not table_field or not table_field.options:
-        return False
-
-    return frappe.get_meta(table_field.options).has_field(child_fieldname)

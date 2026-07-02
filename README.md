@@ -1,6 +1,6 @@
 # Frappe WMS
 
-Frappe WMS is a Warehouse Management System layer for ERPNext. It adds physical location control, putaway, picking, quality checks, cross-docking, cycle counting, WMS dashboards and operational reports on top of ERPNext's standard stock ledger.
+Frappe WMS is a Warehouse Management System layer for ERPNext. It adds physical location control, putaway, picking, quality checks, cross-docking, cycle counting, a WMS workspace and operational reports on top of ERPNext's standard stock ledger.
 
 The app is built around one simple split:
 
@@ -121,12 +121,14 @@ The app registers a `WMS` module.
 | Workspace document | `WMS` |
 | Workspace export | `frappe_wms/wms/workspace/wms/wms.json` |
 
-The app also ships a Dashboard record named `WMS`, so it appears under Build > Dashboard. The dashboard uses the same operational cards and chart as the workspace:
+The WMS workspace is the single dashboard-style entry point for daily operations. It includes:
 
 - Pending QC Checks
 - Cross-dock Pending
 - Active Storage Locations
 - Warehouse Movements by Type
+
+The app intentionally does not create a separate `Dashboard` record named `WMS`, to avoid duplicate WMS dashboard pages.
 
 ---
 
@@ -927,7 +929,6 @@ frappe_wms/
     desktop.py
   fixtures/
     custom_field.json
-    dashboard.json
     dashboard_chart.json
     number_card.json
     workspace.json

@@ -42,10 +42,6 @@ fixtures = [
         "doctype": "Dashboard Chart",
         "filters": [["name", "in", ["Warehouse Movements by Type"]]],
     },
-    {
-        "doctype": "Dashboard",
-        "filters": [["name", "=", "WMS"]],
-    },
 ]
 
 # ------------------------------------------------------------

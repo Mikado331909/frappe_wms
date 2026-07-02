@@ -120,6 +120,7 @@ The app registers a `WMS` module.
 | Workspace route | `/desk/wms` |
 | Workspace document | `WMS` |
 | Workspace export | `frappe_wms/wms/workspace/wms/wms.json` |
+| Desk home tile | `WMS`, under Modules |
 
 The WMS workspace is the single dashboard-style entry point for daily operations. It includes:
 

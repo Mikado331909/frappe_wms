@@ -1,5 +1,6 @@
 {
  "app": "frappe_wms",
+ "category": "Modules",
  "charts": [
   {
    "chart_name": "Warehouse Movements by Type",
@@ -14,6 +15,7 @@
  "for_user": "",
  "hide_custom": 0,
  "icon": "package",
+ "indicator_color": "blue",
  "is_hidden": 0,
  "label": "WMS",
  "links": [

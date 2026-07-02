@@ -5,7 +5,7 @@ frappe.ui.form.on('Pick List', {
 		frm.add_custom_button(
 			__('Generate Location Pick'),
 			function () {
-				// Haal open Location Picks op om toe te voegen aan
+				// Load open Location Picks so the user can append to one.
 				frappe.call({
 					method: 'frappe_wms.wms.doctype.location_pick.location_pick.get_open_location_picks',
 					callback(r) {
@@ -24,9 +24,9 @@ frappe.ui.form.on('Pick List', {
 								default: 'Pick Sequence',
 								reqd: 1,
 								description: __(
-									'Pick Sequence: volg de fysieke looproute.<br>'
-									+ 'FEFO: batch met vroegste vervaldatum eerst.<br>'
-									+ 'FIFO: oudste batch (aanmaakdatum) eerst.'
+									'Pick Sequence: follow the physical walking route.<br>'
+									+ 'FEFO: pick the batch with the earliest expiry date first.<br>'
+									+ 'FIFO: pick the oldest batch by creation date first.'
 								),
 							},
 							{
@@ -34,10 +34,10 @@ frappe.ui.form.on('Pick List', {
 								fieldname: 'action',
 								fieldtype: 'Select',
 								options: [
-									'Nieuwe Location Pick aanmaken',
-									'Toevoegen aan bestaande Location Pick',
+									'Create new Location Pick',
+									'Add to existing Location Pick',
 								],
-								default: 'Nieuwe Location Pick aanmaken',
+								default: 'Create new Location Pick',
 								reqd: 1,
 							},
 							{
@@ -45,8 +45,8 @@ frappe.ui.form.on('Pick List', {
 								fieldname: 'existing_location_pick',
 								fieldtype: 'Link',
 								options: 'Location Pick',
-								depends_on: 'eval:doc.action === "Toevoegen aan bestaande Location Pick"',
-								mandatory_depends_on: 'eval:doc.action === "Toevoegen aan bestaande Location Pick"',
+								depends_on: 'eval:doc.action === "Add to existing Location Pick"',
+								mandatory_depends_on: 'eval:doc.action === "Add to existing Location Pick"',
 								get_query() {
 									return { filters: { docstatus: 0 } };
 								},
@@ -61,7 +61,7 @@ frappe.ui.form.on('Pick List', {
 							fields: fields,
 							primary_action_label: __('Generate'),
 							primary_action(values) {
-								const adding = values.action === 'Toevoegen aan bestaande Location Pick';
+								const adding = values.action === 'Add to existing Location Pick';
 								if (adding && !values.existing_location_pick) {
 									frappe.msgprint(__('Select an existing Location Pick.'));
 									return;

@@ -2,6 +2,7 @@
 "{0} location(s) corrected.","{0} locatie(s) gecorrigeerd."
 "{0} units moved to Outbound Staging.","{0} eenheden verplaatst naar Outbound Staging."
 Action,Actie
+"Add to existing Location Pick","Toevoegen aan bestaande Location Pick"
 Active,Actief
 "Active Locations","Actieve locaties"
 "Add at least one zone before generating count lines.","Voeg minimaal een zone toe voordat je telregels genereert."
@@ -20,6 +21,7 @@ Both,Beide
 "Cross-dock Location","Cross-dock locatie"
 "Cross-dock Settings","Cross-dock instellingen"
 "Current Stock","Huidige voorraad"
+"Create new Location Pick","Nieuwe Location Pick aanmaken"
 Customer,Klant
 "Customer Required","Klant vereist"
 "Customer for whom this line is received. Copied to WMS location stock.","Klant voor wie deze regel wordt ontvangen. Wordt overgenomen op de WMS locatievoorraad."
@@ -83,6 +85,7 @@ Partial,Gedeeltelijk
 "Pick List not changed","Pick List niet gewijzigd"
 "Pick List picked_qty updated to WMS values","Pick List picked_qty bijgewerkt naar WMS waarden"
 "Pick List shows","Pick List toont"
+"Pick Sequence: follow the physical walking route.<br>FEFO: pick the batch with the earliest expiry date first.<br>FIFO: pick the oldest batch by creation date first.","Pick Sequence: volg de fysieke looproute.<br>FEFO: pick de batch met de vroegste vervaldatum eerst.<br>FIFO: pick de oudste batch op aanmaakdatum eerst."
 "Pick List",Picklijst
 "Pick Lists",Picklijsten
 "Picked Qty","Gepickte hoeveelheid"

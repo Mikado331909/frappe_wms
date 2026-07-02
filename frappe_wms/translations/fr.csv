@@ -2,6 +2,7 @@
 "{0} location(s) corrected.","{0} emplacement(s) corrigé(s)."
 "{0} units moved to Outbound Staging.","{0} unités déplacées vers la zone de préparation sortante."
 Action,Action
+"Add to existing Location Pick","Ajouter au Location Pick existant"
 Active,Actif
 "Active Locations","Emplacements actifs"
 "Add at least one zone before generating count lines.","Ajoutez au moins une zone avant de générer les lignes de comptage."
@@ -20,6 +21,7 @@ Both,Les deux
 "Cross-dock Location","Emplacement cross-dock"
 "Cross-dock Settings","Paramètres cross-dock"
 "Current Stock","Stock actuel"
+"Create new Location Pick","Créer un nouveau Location Pick"
 Customer,Client
 "Customer Required","Client requis"
 "Customer for whom this line is received. Copied to WMS location stock.","Client pour lequel cette ligne est réceptionnée. Copié vers le stock par emplacement WMS."
@@ -83,6 +85,7 @@ Partial,Partiel
 "Pick List not changed","Pick List non modifiée"
 "Pick List picked_qty updated to WMS values","picked_qty de la Pick List mis à jour avec les valeurs WMS"
 "Pick List shows","La Pick List indique"
+"Pick Sequence: follow the physical walking route.<br>FEFO: pick the batch with the earliest expiry date first.<br>FIFO: pick the oldest batch by creation date first.","Pick Sequence : suivre le parcours physique.<br>FEFO : prélever le lot avec la date d'expiration la plus proche en premier.<br>FIFO : prélever le lot le plus ancien par date de création en premier."
 "Pick List","Pick List"
 "Pick Lists","Pick Lists"
 "Picked Qty","Quantité prélevée"

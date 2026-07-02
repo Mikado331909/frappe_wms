@@ -1,7 +1,7 @@
 """
-Fasen 2-7 schema patch:
-- Voegt nieuwe custom fields toe aan Purchase Receipt Item
-- Voegt movement_type toe aan bestaande BLM records (backfill)
+Phase 2-7 schema patch:
+- Add custom fields to Purchase Receipt Item
+- Add movement_type to existing BLM records (backfill)
 """
 import frappe
 
@@ -27,7 +27,7 @@ def _add_col(table, column, col_type):
 
 def execute():
     # ------------------------------------------------------------------
-    # Custom fields op Purchase Receipt Item (naast wms_customer)
+    # Custom fields on Purchase Receipt Item, next to wms_customer.
     # ------------------------------------------------------------------
     custom_fields = [
         {
@@ -62,11 +62,11 @@ def execute():
             frappe.get_doc({"doctype": "Custom Field", **cf}).insert(ignore_permissions=True)
 
     # ------------------------------------------------------------------
-    # Backfill movement_type voor bestaande Batch Location Movement records
+    # Backfill movement_type for existing Batch Location Movement records.
     # ------------------------------------------------------------------
     _add_col("tabBatch Location Movement", "movement_type", "varchar(50) DEFAULT NULL")
 
-    # Inbound (geen from_location)
+    # Inbound (no from_location)
     frappe.db.sql("""
         UPDATE `tabBatch Location Movement`
         SET movement_type = 'Inbound'

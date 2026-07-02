@@ -254,6 +254,57 @@ def _validate_customer_on_location(storage_location, customer):
 
 
 # ---------------------------------------------------------------------------
+# Locking helpers
+# ---------------------------------------------------------------------------
+
+
+def _lock_storage_locations(*storage_locations):
+    """
+    Serialize WMS stock mutations per physical location.
+
+    Locking the Storage Location rows prevents two concurrent requests from
+    creating or updating Batch Location Stock rows for the same location at the
+    same time. Locations are sorted to keep multi-location moves deadlock-safe.
+    """
+    locations = tuple(sorted({loc for loc in storage_locations if loc}))
+    if not locations:
+        return
+
+    frappe.db.sql(
+        """
+        SELECT name
+        FROM `tabStorage Location`
+        WHERE name IN %(locations)s
+        ORDER BY name
+        FOR UPDATE
+        """,
+        {"locations": locations},
+    )
+
+
+def _get_location_stock_for_update(item_code, batch_no, warehouse, storage_location):
+    rows = frappe.db.sql(
+        """
+        SELECT name, qty, customer
+        FROM `tabBatch Location Stock`
+        WHERE item_code = %(item_code)s
+          AND batch_no = %(batch_no)s
+          AND warehouse = %(warehouse)s
+          AND storage_location = %(storage_location)s
+        FOR UPDATE
+        """,
+        {
+            "item_code": item_code,
+            "batch_no": batch_no,
+            "warehouse": warehouse,
+            "storage_location": storage_location,
+        },
+        as_dict=True,
+    )
+    return rows[0] if rows else None
+
+
+# ---------------------------------------------------------------------------
 # Qty mutations
 # ---------------------------------------------------------------------------
 
@@ -267,19 +318,12 @@ def add_location_qty(
     if qty <= 0:
         return
 
+    _lock_storage_locations(storage_location)
     customer = _get_customer_for_batch(batch_no)
     _validate_customer_on_location(storage_location, customer)
 
-    existing = frappe.db.get_value(
-        "Batch Location Stock",
-        {
-            "item_code": item_code,
-            "batch_no": batch_no,
-            "warehouse": warehouse,
-            "storage_location": storage_location,
-        },
-        ["name", "qty"],
-        as_dict=True,
+    existing = _get_location_stock_for_update(
+        item_code, batch_no, warehouse, storage_location
     )
 
     if existing:
@@ -323,16 +367,9 @@ def deduct_location_qty(
     if qty <= 0:
         return
 
-    existing = frappe.db.get_value(
-        "Batch Location Stock",
-        {
-            "item_code": item_code,
-            "batch_no": batch_no,
-            "warehouse": warehouse,
-            "storage_location": storage_location,
-        },
-        ["name", "qty", "customer"],
-        as_dict=True,
+    _lock_storage_locations(storage_location)
+    existing = _get_location_stock_for_update(
+        item_code, batch_no, warehouse, storage_location
     )
 
     if not existing:
@@ -348,7 +385,7 @@ def deduct_location_qty(
         frappe.throw(
             _(
                 "Cannot deduct {0} from location {1}: only {2} available "
-                "voor Item {3} Batch {4}."
+                "for Item {3} Batch {4}."
             ).format(
                 flt(qty, 3), storage_location, flt(existing.qty, 3), item_code, batch_no,
             )
@@ -378,20 +415,15 @@ def move_location_qty(
     qty = flt(qty)
     if qty <= 0:
         return
+    if from_location == to_location:
+        return
 
+    _lock_storage_locations(from_location, to_location)
     customer = _get_customer_for_batch(batch_no)
     _validate_customer_on_location(to_location, customer)
 
-    src = frappe.db.get_value(
-        "Batch Location Stock",
-        {
-            "item_code": item_code,
-            "batch_no": batch_no,
-            "warehouse": warehouse,
-            "storage_location": from_location,
-        },
-        ["name", "qty"],
-        as_dict=True,
+    src = _get_location_stock_for_update(
+        item_code, batch_no, warehouse, from_location
     )
     if not src:
         frappe.throw(
@@ -403,22 +435,14 @@ def move_location_qty(
         frappe.throw(
             _(
                 "Insufficient stock on {0}: available {1}, requested {2} "
-                "voor Item {3} Batch {4}."
+                "for Item {3} Batch {4}."
             ).format(from_location, flt(src.qty, 3), flt(qty, 3), item_code, batch_no)
         )
 
     remaining = flt(src.qty) - qty
 
-    dst = frappe.db.get_value(
-        "Batch Location Stock",
-        {
-            "item_code": item_code,
-            "batch_no": batch_no,
-            "warehouse": warehouse,
-            "storage_location": to_location,
-        },
-        ["name", "qty"],
-        as_dict=True,
+    dst = _get_location_stock_for_update(
+        item_code, batch_no, warehouse, to_location
     )
     if dst:
         frappe.db.set_value("Batch Location Stock", dst.name, "qty", flt(dst.qty) + qty)

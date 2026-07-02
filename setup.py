@@ -1,14 +1,20 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
+from frappe_wms import __version__ as version
 
 with open("requirements.txt") as f:
-    install_requires = f.read().strip().split("\n")
+    install_requires = [
+        line.strip()
+        for line in f.read().splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
 
 setup(
     name="frappe_wms",
-    version="0.0.1",
+    version=version,
     description="Lightweight WMS location layer for ERPNext",
-    author="Your Company",
-    author_email="admin@example.com",
+    author="Crings BV",
+    author_email="sales@crings.eu",
     packages=find_packages(),
     zip_safe=False,
     include_package_data=True,

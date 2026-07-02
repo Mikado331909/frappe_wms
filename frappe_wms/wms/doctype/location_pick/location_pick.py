@@ -212,71 +212,74 @@ def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None
         doc.append("pick_lists", {"pick_list": pl_name})
 
         for pl_item in pl.locations:
-            batch_no = _get_pl_item_batch_no(pl_item)
-            if not batch_no:
-                continue
+            for batch_no, batch_qty in _iter_pl_item_batch_entries(pl_item):
+                batch_qty = frappe.utils.flt(batch_qty)
+                if not batch_no or batch_qty <= 0:
+                    continue
 
-            # Qty already committed by other non-cancelled Location Picks
-            wms_committed = frappe.utils.flt(
-                frappe.db.sql("""
-                    SELECT COALESCE(SUM(lpl.required_qty), 0)
-                    FROM `tabLocation Pick Line` lpl
-                    INNER JOIN `tabLocation Pick` lp ON lp.name = lpl.parent
-                    WHERE lpl.pick_list_item = %s
-                      AND lp.docstatus IN (0, 1)
-                """, pl_item.name)[0][0]
-            )
-            required_qty = frappe.utils.flt(pl_item.qty) - wms_committed
-            if required_qty <= 0.001:
-                continue
+                # Qty already committed by other non-cancelled Location Picks
+                # for this exact Pick List row and batch.
+                wms_committed = frappe.utils.flt(
+                    frappe.db.sql("""
+                        SELECT COALESCE(SUM(lpl.required_qty), 0)
+                        FROM `tabLocation Pick Line` lpl
+                        INNER JOIN `tabLocation Pick` lp ON lp.name = lpl.parent
+                        WHERE lpl.pick_list_item = %s
+                          AND lpl.batch_no = %s
+                          AND lp.docstatus IN (0, 1)
+                    """, (pl_item.name, batch_no))[0][0]
+                )
+                required_qty = batch_qty - wms_committed
+                if required_qty <= 0.001:
+                    continue
 
-            # Available storage locations for this item, batch and warehouse
-            # Supports both old ('Storage') and new ('Active Storage') location types
-            available_rows = frappe.db.sql(
-                f"""
-                SELECT bls.name, bls.qty, bls.storage_location,
-                       sl.pick_sequence,
-                       b.expiry_date, b.creation AS batch_creation
-                FROM `tabBatch Location Stock` bls
-                INNER JOIN `tabStorage Location` sl ON sl.name = bls.storage_location
-                LEFT  JOIN `tabBatch`            b  ON b.name  = bls.batch_no
-                WHERE bls.item_code = %(item_code)s
-                  AND bls.batch_no   = %(batch_no)s
-                  AND bls.warehouse  = %(warehouse)s
-                  AND sl.location_type IN ('Storage', 'Active Storage')
-                  AND sl.is_active = 1
-                  AND bls.qty > 0
-                ORDER BY {order_by}
-                """,
-                {
-                    "item_code": pl_item.item_code,
-                    "batch_no": batch_no,
-                    "warehouse": pl_item.warehouse,
-                },
-                as_dict=True,
-            )
-
-            remaining = required_qty
-            for avail in available_rows:
-                if remaining <= 0.001:
-                    break
-                pick_qty = min(frappe.utils.flt(avail.qty), remaining)
-                doc.append(
-                    "items",
+                # Available storage locations for this item, batch and warehouse.
+                # Supports both old ('Storage') and new ('Active Storage') location types.
+                available_rows = frappe.db.sql(
+                    f"""
+                    SELECT bls.name, bls.qty, bls.storage_location,
+                           sl.pick_sequence,
+                           b.expiry_date, b.creation AS batch_creation
+                    FROM `tabBatch Location Stock` bls
+                    INNER JOIN `tabStorage Location` sl ON sl.name = bls.storage_location
+                    LEFT  JOIN `tabBatch`            b  ON b.name  = bls.batch_no
+                    WHERE bls.item_code = %(item_code)s
+                      AND bls.batch_no   = %(batch_no)s
+                      AND bls.warehouse  = %(warehouse)s
+                      AND sl.location_type IN ('Storage', 'Active Storage')
+                      AND sl.is_active = 1
+                      AND bls.qty > 0
+                    ORDER BY {order_by}
+                    """,
                     {
                         "item_code": pl_item.item_code,
                         "batch_no": batch_no,
                         "warehouse": pl_item.warehouse,
-                        "source_location": avail.storage_location,
-                        "required_qty": pick_qty,
-                        "picked_qty": 0.0,
-                        "uom": pl_item.uom,
-                        "pick_list_item": pl_item.name,
-                        "pick_list": pl_name,
                     },
+                    as_dict=True,
                 )
-                new_lines_added += 1
-                remaining -= pick_qty
+
+                remaining = required_qty
+                for avail in available_rows:
+                    if remaining <= 0.001:
+                        break
+                    pick_qty = min(frappe.utils.flt(avail.qty), remaining)
+                    doc.append(
+                        "items",
+                        {
+                            "item_code": pl_item.item_code,
+                            "batch_no": batch_no,
+                            "warehouse": pl_item.warehouse,
+                            "source_location": avail.storage_location,
+                            "required_qty": pick_qty,
+                            "picked_qty": 0.0,
+                            "uom": pl_item.uom,
+                            "pick_list_item": pl_item.name,
+                            "pick_list": pl_name,
+                        },
+                    )
+                    new_lines_added += 1
+                    remaining -= pick_qty
 
     if not doc.items and not location_pick:
         frappe.throw(
@@ -346,7 +349,7 @@ def get_pick_qty_discrepancies(location_pick):
 
 @frappe.whitelist()
 def apply_pick_qty_update(location_pick):
-    """Overschrijf Pick List Item.picked_qty met de WMS werkelijke hoeveelheden."""
+    """Overwrite Pick List Item.picked_qty with the actual WMS quantities."""
     doc = frappe.get_doc("Location Pick", location_pick)
 
     seen_pl_items = set()
@@ -373,10 +376,11 @@ def apply_pick_qty_update(location_pick):
 # ----------------------------------------------------------------------
 
 
-def _get_pl_item_batch_no(pl_item):
-    """Geef het batch_no voor een Pick List Item rij (v15 en v16 compatibel)."""
+def _iter_pl_item_batch_entries(pl_item):
+    """Yield batch and qty pairs for a Pick List Item row."""
     if getattr(pl_item, "batch_no", None):
-        return pl_item.batch_no
+        yield pl_item.batch_no, frappe.utils.flt(getattr(pl_item, "qty", 0))
+        return
 
     bundle = getattr(pl_item, "serial_and_batch_bundle", None)
     if not bundle and getattr(pl_item, "name", None):
@@ -385,16 +389,25 @@ def _get_pl_item_batch_no(pl_item):
         )
 
     if bundle:
-        entry = frappe.db.get_value(
-            "Serial and Batch Entry", {"parent": bundle}, "batch_no"
+        entries = frappe.db.get_all(
+            "Serial and Batch Entry",
+            filters={"parent": bundle},
+            fields=["batch_no", "qty"],
         )
-        return entry or None
+        for entry in entries:
+            if entry.batch_no and frappe.utils.flt(entry.qty) != 0:
+                yield entry.batch_no, abs(frappe.utils.flt(entry.qty))
 
+
+def _get_pl_item_batch_no(pl_item):
+    """Return the first batch number for legacy callers."""
+    for batch_no, _qty in _iter_pl_item_batch_entries(pl_item):
+        return batch_no
     return None
 
 
 def _order_by_for_strategy(strategy):
-    """Geef SQL ORDER BY clause voor de gekozen pickstrategie."""
+    """Return the SQL ORDER BY clause for the chosen picking strategy."""
     if "FEFO" in strategy:
         return (
             "CASE WHEN b.expiry_date IS NULL THEN '9999-12-31' "

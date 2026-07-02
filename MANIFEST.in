@@ -1,2 +1,3 @@
+include README.md
 include requirements.txt
-recursive-include frappe_wms *.json *.js *.css *.html *.py *.csv *.svg
+recursive-include frappe_wms *.json *.js *.css *.html *.py *.csv *.svg *.txt

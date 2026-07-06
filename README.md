@@ -425,7 +425,7 @@ On submit:
 - QC creates a `WMS QC Check`.
 - Cross-dock creates a `WMS Cross Dock`.
 
-On cancel, WMS attempts to reverse the earlier receipt from the expected WMS location and never deducts more than is still available.
+On cancel, WMS reverses the exact `Batch Location Movement` records the document created (replay-based reversal). Delivery Note and Stock Entry cancellation are reversed the same way. If stock has moved on and a reversal cannot be fully applied, the reversal is capped at the available quantity and the shortfall is reported in the UI and the Error Log instead of being silently ignored.
 
 ### Pick List
 
@@ -907,11 +907,12 @@ Developer rules for new UI text:
 ## Limitations And Notes
 
 - ERPNext v16 Serial and Batch Bundle is read to find batch information. The app does not maintain a separate serial-number location stock model.
-- Cycle Count adjusts `Batch Location Stock`. Financial inventory corrections must still be handled through ERPNext.
+- Cycle Count adjusts `Batch Location Stock` and reverses its corrections on cancel. Financial inventory corrections must still be handled through an ERPNext Stock Reconciliation; the app warns about this on submit.
 - `default_putaway_mode` contains Manual, Suggest and Enforce. The current UI mainly uses suggestions and confirmation checks.
 - `auto_create_cross_dock` exists as a setting. Purchase Receipt logic detects cross-dock mainly through manual fields or existing PO/SO links.
 - Without active Storage Locations per warehouse, WMS intentionally skips some event actions.
-- The current app does not define a complete custom role model. Access is managed through standard Frappe/ERPNext permissions on DocTypes and reports.
+- The current app does not define a complete custom role model. Access is managed through standard Frappe/ERPNext permissions on DocTypes and reports. All whitelisted endpoints enforce DocType-level permission checks server-side.
+- When `validate_against_erpnext` is enabled in WMS Settings, the ceiling check (total WMS location qty must not exceed ERPNext stock ledger qty per item + batch + warehouse) is enforced inside the stock helpers under the location lock, not only in the Batch Location Stock form.
 
 ---
 

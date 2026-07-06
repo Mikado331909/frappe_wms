@@ -89,6 +89,7 @@ def get_putaway_suggestion(warehouse, batch_no, item_code=None):
     Return the putaway suggestion for a batch in a warehouse.
     Calls the putaway rule engine and returns zone and location.
     """
+    frappe.has_permission("Batch Location Stock", "read", throw=True)
     from frappe_wms.wms.events.utils import evaluate_putaway_rule
     customer = frappe.db.get_value("Batch", batch_no, "customer") or None
     return evaluate_putaway_rule(warehouse, customer, item_code)
@@ -107,6 +108,9 @@ def check_location_compatibility(to_location, batch_no, qty):
       existing_items: list  (only for status "warning")
       capacity_warning: str | null
     """
+    # Discloses which customer's stock sits where - restrict to stock roles.
+    frappe.has_permission("Batch Location Stock", "read", throw=True)
+
     qty = frappe.utils.flt(qty)
 
     # Customer linked to this batch
@@ -208,7 +212,11 @@ def move_stock(source_name, to_location, qty):
     """
     from frappe_wms.wms.events.utils import move_location_qty
 
+    frappe.has_permission("Batch Location Stock", "write", throw=True)
+
     qty = frappe.utils.flt(qty)
+    if qty <= 0:
+        frappe.throw(_("Quantity must be greater than zero."))
     src = frappe.get_doc("Batch Location Stock", source_name)
     move_location_qty(
         item_code=src.item_code,

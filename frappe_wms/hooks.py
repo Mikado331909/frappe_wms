@@ -4,7 +4,7 @@ app_publisher = "Crings BV"
 app_description = "Lightweight WMS location layer for ERPNext"
 app_email = "sales@crings.eu"
 app_license = "MIT"
-app_version = "0.2.0"
+app_version = "0.3.0"
 app_logo_url = "/assets/frappe_wms/images/frappe-wms-logo.svg"
 app_home = "/desk/wms"
 
@@ -54,9 +54,11 @@ doc_events = {
     },
     "Stock Entry": {
         "on_submit": "frappe_wms.wms.events.stock_entry.on_submit",
+        "on_cancel": "frappe_wms.wms.events.stock_entry.on_cancel",
     },
     "Delivery Note": {
         "on_submit": "frappe_wms.wms.events.delivery_note.on_submit",
+        "on_cancel": "frappe_wms.wms.events.delivery_note.on_cancel",
     },
 }
 

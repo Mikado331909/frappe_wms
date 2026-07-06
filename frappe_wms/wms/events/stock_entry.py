@@ -90,8 +90,15 @@ def _process_target(doc, item):
             warehouse=t_warehouse,
             storage_location=dest_loc,
             qty=qty,
-            uom=item.uom,
+            uom=getattr(item, "stock_uom", None) or item.uom,
             ref_doctype="Stock Entry",
             ref_name=doc.name,
             movement_type=movement_type,
         )
+
+
+def on_cancel(doc, method=None):
+    """Reverse WMS movements created by this Stock Entry (exact replay)."""
+    from frappe_wms.wms.events.utils import reverse_reference_movements
+
+    reverse_reference_movements("Stock Entry", doc.name)

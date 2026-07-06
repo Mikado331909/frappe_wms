@@ -71,7 +71,7 @@
    "fieldtype": "Select",
    "in_standard_filter": 1,
    "label": "Movement Type",
-   "options": "\nInbound\nPutaway\nPick\nCross-dock\nQC Release\nProduction\nProduction Return\nCycle Count\nManual"
+   "options": "\nInbound\nPutaway\nPick\nCross-dock\nQC Release\nProduction\nProduction Return\nCycle Count\nManual\nReversal"
   },
   {
    "fieldname": "customer",
@@ -101,14 +101,16 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "From Location",
-   "options": "Storage Location"
+   "options": "Storage Location",
+   "search_index": 1
   },
   {
    "fieldname": "to_location",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "To Location",
-   "options": "Storage Location"
+   "options": "Storage Location",
+   "search_index": 1
   },
   {
    "fieldname": "qty",
@@ -132,7 +134,8 @@
    "fieldname": "reference_name",
    "fieldtype": "Dynamic Link",
    "label": "Reference Name",
-   "options": "reference_doctype"
+   "options": "reference_doctype",
+   "search_index": 1
   },
   {
    "fieldname": "remarks",

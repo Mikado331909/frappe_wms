@@ -60,7 +60,13 @@ def iter_batch_entries(item):
             if e.batch_no and flt(e.qty) != 0:
                 yield e.batch_no, abs(flt(e.qty))
     elif getattr(item, "batch_no", None):
-        yield item.batch_no, flt(item.qty)
+        # Legacy path: always yield in STOCK UOM, like bundle entries do.
+        # item.qty is in the transaction UOM (e.g. Box), while the stock
+        # ledger and Batch Location Stock track stock UOM (e.g. Nos).
+        stock_qty = flt(getattr(item, "stock_qty", 0))
+        if not stock_qty:
+            stock_qty = flt(item.qty) * (flt(getattr(item, "conversion_factor", 0)) or 1.0)
+        yield item.batch_no, stock_qty
 
 
 # ---------------------------------------------------------------------------
@@ -304,6 +310,51 @@ def _get_location_stock_for_update(item_code, batch_no, warehouse, storage_locat
     return rows[0] if rows else None
 
 
+def _check_erpnext_ceiling(item_code, batch_no, warehouse, add_qty):
+    """
+    Enforce that total WMS location qty never exceeds the ERPNext stock
+    ledger qty for the same item + batch + warehouse.
+
+    Runs inside add_location_qty *after* the location lock is taken, so it is
+    race-safe per location. Controlled by WMS Settings.validate_against_erpnext.
+    (The Document-level validation in Batch Location Stock is bypassed by the
+    helpers via db.set_value / ignore_validate, so the check must live here.)
+    """
+    if not frappe.db.get_single_value("WMS Settings", "validate_against_erpnext"):
+        return
+
+    from frappe_wms.wms.doctype.batch_location_stock.batch_location_stock import (
+        _get_erpnext_batch_qty,
+    )
+
+    erpnext_qty = _get_erpnext_batch_qty(item_code, batch_no, warehouse)
+    current_total = flt(
+        frappe.db.sql(
+            """
+            SELECT COALESCE(SUM(qty), 0)
+            FROM `tabBatch Location Stock`
+            WHERE item_code = %s AND batch_no = %s AND warehouse = %s
+            """,
+            (item_code, batch_no, warehouse),
+        )[0][0]
+    )
+
+    if current_total + flt(add_qty) > erpnext_qty + 0.001:
+        frappe.throw(
+            _(
+                "Adding {0} would raise total location qty to {1} for Item {2}, "
+                "Batch {3}, Warehouse {4}, exceeding ERPNext stock of {5}."
+            ).format(
+                flt(add_qty, 3),
+                flt(current_total + flt(add_qty), 3),
+                item_code,
+                batch_no,
+                warehouse,
+                flt(erpnext_qty, 3),
+            )
+        )
+
+
 # ---------------------------------------------------------------------------
 # Qty mutations
 # ---------------------------------------------------------------------------
@@ -321,6 +372,7 @@ def add_location_qty(
     _lock_storage_locations(storage_location)
     customer = _get_customer_for_batch(batch_no)
     _validate_customer_on_location(storage_location, customer)
+    _check_erpnext_ceiling(item_code, batch_no, warehouse, qty)
 
     existing = _get_location_stock_for_update(
         item_code, batch_no, warehouse, storage_location
@@ -475,6 +527,142 @@ def move_location_qty(
     )
 
     frappe.db.set_value("Batch Location Stock", src.name, "qty", max(remaining, 0.0))
+
+
+# ---------------------------------------------------------------------------
+# Reversal by replay
+# ---------------------------------------------------------------------------
+
+
+def reverse_reference_movements(ref_doctype, ref_name):
+    """
+    Reverse every Batch Location Movement created by a reference document,
+    in reverse chronological order.
+
+    This replaces heuristic cancel logic ("the stock *should* still be at
+    RECV") with an exact replay of what actually happened:
+      * add    (None -> loc)  becomes a deduct from loc
+      * deduct (loc -> None)  becomes an add back to loc
+      * move   (a -> b)       becomes a move b -> a
+
+    If stock has since moved on and a reversal cannot be fully applied, the
+    reversal is capped at the available qty and the shortfall is reported
+    loudly instead of silently ignored.
+    """
+    movements = frappe.db.get_all(
+        "Batch Location Movement",
+        filters={
+            "reference_doctype": ref_doctype,
+            "reference_name": ref_name,
+            "movement_type": ["!=", "Reversal"],
+        },
+        fields=[
+            "name", "item_code", "batch_no", "warehouse",
+            "from_location", "to_location", "qty",
+        ],
+        order_by="creation desc, name desc",
+    )
+
+    shortfalls = []
+
+    for m in movements:
+        qty = flt(m.qty)
+        if qty <= 0:
+            continue
+
+        if m.from_location and m.to_location:
+            available = _get_available_qty(
+                m.item_code, m.batch_no, m.warehouse, m.to_location
+            )
+            reversal_qty = min(qty, available)
+            if qty - reversal_qty > 0.001:
+                shortfalls.append(
+                    _("{0} / batch {1}: {2} of {3} could not be moved back from {4}").format(
+                        m.item_code, m.batch_no,
+                        flt(qty - reversal_qty, 3), flt(qty, 3), m.to_location,
+                    )
+                )
+            if reversal_qty > 0.001:
+                move_location_qty(
+                    item_code=m.item_code,
+                    batch_no=m.batch_no,
+                    warehouse=m.warehouse,
+                    from_location=m.to_location,
+                    to_location=m.from_location,
+                    qty=reversal_qty,
+                    ref_doctype=ref_doctype,
+                    ref_name=ref_name,
+                    movement_type="Reversal",
+                )
+
+        elif m.to_location:
+            available = _get_available_qty(
+                m.item_code, m.batch_no, m.warehouse, m.to_location
+            )
+            reversal_qty = min(qty, available)
+            if qty - reversal_qty > 0.001:
+                shortfalls.append(
+                    _("{0} / batch {1}: {2} of {3} no longer available at {4}").format(
+                        m.item_code, m.batch_no,
+                        flt(qty - reversal_qty, 3), flt(qty, 3), m.to_location,
+                    )
+                )
+            if reversal_qty > 0.001:
+                deduct_location_qty(
+                    item_code=m.item_code,
+                    batch_no=m.batch_no,
+                    warehouse=m.warehouse,
+                    storage_location=m.to_location,
+                    qty=reversal_qty,
+                    ref_doctype=ref_doctype,
+                    ref_name=ref_name,
+                    movement_type="Reversal",
+                )
+
+        elif m.from_location:
+            add_location_qty(
+                item_code=m.item_code,
+                batch_no=m.batch_no,
+                warehouse=m.warehouse,
+                storage_location=m.from_location,
+                qty=qty,
+                uom=None,
+                ref_doctype=ref_doctype,
+                ref_name=ref_name,
+                movement_type="Reversal",
+            )
+
+    if shortfalls:
+        message = _(
+            "WMS location stock was only partially reversed because stock "
+            "has moved on since {0} {1} was submitted:"
+        ).format(_(ref_doctype), ref_name)
+        details = "<br>".join(frappe.utils.escape_html(s) for s in shortfalls)
+        frappe.log_error(
+            title=f"WMS partial reversal: {ref_doctype} {ref_name}",
+            message="\n".join(shortfalls),
+        )
+        frappe.msgprint(
+            f"{message}<br>{details}",
+            title=_("Partial WMS Reversal"),
+            indicator="orange",
+        )
+
+
+def _get_available_qty(item_code, batch_no, warehouse, storage_location):
+    return flt(
+        frappe.db.get_value(
+            "Batch Location Stock",
+            {
+                "item_code": item_code,
+                "batch_no": batch_no,
+                "warehouse": warehouse,
+                "storage_location": storage_location,
+            },
+            "qty",
+        )
+        or 0.0
+    )
 
 
 # ---------------------------------------------------------------------------

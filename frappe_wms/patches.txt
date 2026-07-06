@@ -16,3 +16,4 @@ frappe_wms.patches.v1_1.normalize_wms_v16_app_routing
 frappe_wms.patches.v1_2.translate_wms_sources_to_english
 frappe_wms.patches.v1_2.remove_standalone_wms_dashboard
 frappe_wms.patches.v1_2.show_wms_on_desk_home
+frappe_wms.patches.v1_3.add_core_key_indexes

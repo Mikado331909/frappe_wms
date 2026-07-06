@@ -1,4 +1,5 @@
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -22,8 +23,10 @@ class StorageLocation(Document):
         )
         if existing:
             frappe.throw(
-                f"Warehouse {self.warehouse} already has an active Receiving location: {existing}. "
-                "Deactivate the existing one before creating another."
+                _(
+                    "Warehouse {0} already has an active Receiving location: {1}. "
+                    "Deactivate the existing one before creating another."
+                ).format(self.warehouse, existing)
             )
 
     def _validate_one_staging_per_warehouse(self):
@@ -41,6 +44,8 @@ class StorageLocation(Document):
         )
         if existing:
             frappe.throw(
-                f"Warehouse {self.warehouse} already has an active Picking Staging location: {existing}. "
-                "Deactivate the existing one before creating another."
+                _(
+                    "Warehouse {0} already has an active Picking Staging location: {1}. "
+                    "Deactivate the existing one before creating another."
+                ).format(self.warehouse, existing)
             )

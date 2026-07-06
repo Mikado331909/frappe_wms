@@ -20,12 +20,28 @@ class WMSCrossDock(Document):
             move_location_qty,
         )
 
+        self.check_permission("write")
+
         moved = 0
         for item in self.items:
             if not item.xdock_location:
                 continue
 
-            qty_remaining = flt(item.qty) - flt(item.staged_qty)
+            # Re-read staged_qty under a row lock. Two concurrent clicks on
+            # the button would otherwise both see the in-memory staged_qty,
+            # both compute the full remaining qty, and move the stock twice
+            # while recording it once (lost update).
+            locked = frappe.db.sql(
+                """
+                SELECT staged_qty FROM `tabWMS Cross Dock Item`
+                WHERE name = %s FOR UPDATE
+                """,
+                item.name,
+                as_dict=True,
+            )
+            current_staged = flt(locked[0].staged_qty) if locked else flt(item.staged_qty)
+
+            qty_remaining = flt(item.qty) - current_staged
             if qty_remaining <= 0.001:
                 continue
 
@@ -67,7 +83,7 @@ class WMSCrossDock(Document):
                 "WMS Cross Dock Item",
                 item.name,
                 "staged_qty",
-                flt(item.staged_qty) + qty_to_move,
+                current_staged + qty_to_move,
             )
             moved += qty_to_move
 

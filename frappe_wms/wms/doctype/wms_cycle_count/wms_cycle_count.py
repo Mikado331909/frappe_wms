@@ -17,6 +17,16 @@ class WMSCycleCount(Document):
         self.db_set("status", "Completed")
 
     def on_cancel(self):
+        # Corrections applied at submit mutate real location stock;
+        # cancelling the document must reverse them (exact replay).
+        from frappe_wms.wms.events.utils import reverse_reference_movements
+
+        reverse_reference_movements("WMS Cycle Count", self.name)
+        for line in self.get("count_lines", []):
+            if line.status == "Corrected":
+                frappe.db.set_value(
+                    "WMS Cycle Count Line", line.name, "status", "Counted"
+                )
         self.db_set("status", "Cancelled")
 
     def _calculate_differences(self):
@@ -75,8 +85,14 @@ class WMSCycleCount(Document):
 
         if corrections_applied:
             frappe.msgprint(
-                _("{0} location(s) corrected.").format(corrections_applied),
-                indicator="green",
+                _(
+                    "{0} location(s) corrected. Note: these corrections only "
+                    "adjust WMS location stock. If the counted differences "
+                    "are real physical gains or losses, create an ERPNext "
+                    "Stock Reconciliation as well, otherwise WMS and the "
+                    "ERPNext stock ledger will disagree."
+                ).format(corrections_applied),
+                indicator="orange",
             )
 
 
@@ -86,14 +102,20 @@ def generate_count_lines(cycle_count):
     Generate count lines from current Batch Location Stock for the selected zones.
     Deletes existing draft lines first.
     """
+    frappe.has_permission("WMS Cycle Count", "write", throw=True)
     doc = frappe.get_doc("WMS Cycle Count", cycle_count)
+
+    if doc.docstatus != 0:
+        frappe.throw(_("Count lines can only be regenerated on a draft Cycle Count."))
 
     zones = [row.zone for row in doc.get("count_zones", [])]
     if not zones:
         frappe.throw(_("Add at least one zone before generating count lines."))
 
-    # Delete existing lines
-    frappe.db.delete("WMS Cycle Count Line", {"parent": cycle_count})
+    # Clear existing lines through the document API so the in-memory child
+    # table and the database stay consistent (frappe.db.delete + append on a
+    # stale doc leaves phantom rows in memory).
+    doc.set("count_lines", [])
 
     # Load all BLS records for the selected zones
     bls_records = frappe.db.sql(
@@ -131,5 +153,5 @@ def generate_count_lines(cycle_count):
         lines_added += 1
 
     doc.status = "In Progress"
-    doc.save(ignore_permissions=True)
+    doc.save()
     return lines_added

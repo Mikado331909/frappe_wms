@@ -41,3 +41,10 @@ def on_submit(doc, method=None):
                 ref_name=doc.name,
                 movement_type="Pick",
             )
+
+
+def on_cancel(doc, method=None):
+    """Restore WMS staging stock deducted at submit (exact replay)."""
+    from frappe_wms.wms.events.utils import reverse_reference_movements
+
+    reverse_reference_movements("Delivery Note", doc.name)

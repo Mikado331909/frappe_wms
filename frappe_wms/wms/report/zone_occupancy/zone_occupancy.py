@@ -42,6 +42,9 @@ def _get_data(filters):
     if conditions:
         where += " AND " + " AND ".join(conditions)
 
+    # Aggregate Batch Location Stock per location FIRST, then join. Joining
+    # the raw stock table directly multiplies sl.max_qty by the number of
+    # stock rows per location (join fan-out), inflating capacity.
     rows = frappe.db.sql(f"""
         SELECT
             z.name AS zone,
@@ -50,12 +53,16 @@ def _get_data(filters):
             z.zone_type,
             z.dedicated_customer,
             COUNT(DISTINCT sl.name) AS active_locations,
-            COUNT(DISTINCT CASE WHEN bls.qty > 0 THEN sl.name END) AS occupied_locations,
+            COUNT(DISTINCT CASE WHEN loc_stock.qty > 0 THEN sl.name END) AS occupied_locations,
             COALESCE(SUM(sl.max_qty), 0) AS total_capacity,
-            COALESCE(SUM(bls.qty), 0) AS current_stock
+            COALESCE(SUM(loc_stock.qty), 0) AS current_stock
         FROM `tabWMS Zone` z
         LEFT JOIN `tabStorage Location` sl ON sl.zone = z.name AND sl.is_active = 1
-        LEFT JOIN `tabBatch Location Stock` bls ON bls.storage_location = sl.name
+        LEFT JOIN (
+            SELECT storage_location, SUM(qty) AS qty
+            FROM `tabBatch Location Stock`
+            GROUP BY storage_location
+        ) loc_stock ON loc_stock.storage_location = sl.name
         {where}
         GROUP BY z.name
         ORDER BY z.warehouse, z.zone_name

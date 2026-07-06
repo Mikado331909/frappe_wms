@@ -20,12 +20,10 @@ class LocationPick(Document):
         self._check_available_qty()
 
     def on_submit(self):
-        self.status = "Completed"
         self._move_to_staging()
         self.db_set("status", "Completed")
 
     def on_cancel(self):
-        self.status = "Cancelled"
         self._reverse_staging()
         self.db_set("status", "Cancelled")
 
@@ -152,6 +150,7 @@ class LocationPick(Document):
 @frappe.whitelist()
 def get_open_location_picks():
     """Return open, not submitted Location Pick documents."""
+    frappe.has_permission("Location Pick", "read", throw=True)
     return frappe.get_all(
         "Location Pick",
         filters={"docstatus": 0},
@@ -170,6 +169,9 @@ def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None
     picking_strategy: 'Pick Sequence' / 'FEFO ...' / 'FIFO ...'
     location_pick:    if given, append lines to this existing Location Pick
     """
+    frappe.has_permission("Location Pick", "create", throw=True)
+    frappe.has_permission("Pick List", "read", throw=True)
+
     # Normalize to a Python list
     if isinstance(pick_lists, str):
         try:
@@ -207,6 +209,14 @@ def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None
                 _("Pick List {0} is already added to this Location Pick.").format(pl_name)
             )
             continue
+
+        # Lock the Pick List row so two users generating a Location Pick for
+        # the same Pick List at the same time cannot both read the same
+        # "already committed" totals and double-plan the stock.
+        frappe.db.sql(
+            "SELECT name FROM `tabPick List` WHERE name = %s FOR UPDATE",
+            pl_name,
+        )
 
         pl = frappe.get_doc("Pick List", pl_name)
         doc.append("pick_lists", {"pick_list": pl_name})
@@ -310,6 +320,7 @@ def generate_location_pick(pick_lists, picking_strategy=None, location_pick=None
 @frappe.whitelist()
 def get_pick_qty_discrepancies(location_pick):
     """Compare WMS picked qty with ERPNext Pick List picked_qty per line."""
+    frappe.has_permission("Location Pick", "read", throw=True)
     doc = frappe.get_doc("Location Pick", location_pick)
     discrepancies = []
 
@@ -350,6 +361,8 @@ def get_pick_qty_discrepancies(location_pick):
 @frappe.whitelist()
 def apply_pick_qty_update(location_pick):
     """Overwrite Pick List Item.picked_qty with the actual WMS quantities."""
+    # Writes into ERPNext Pick List rows, so require write permission there.
+    frappe.has_permission("Pick List", "write", throw=True)
     doc = frappe.get_doc("Location Pick", location_pick)
 
     seen_pl_items = set()
@@ -368,8 +381,6 @@ def apply_pick_qty_update(location_pick):
         )
         frappe.db.set_value("Pick List Item", line.pick_list_item, "picked_qty", wms_qty)
 
-    frappe.db.commit()
-
 
 # ----------------------------------------------------------------------
 # Helpers
@@ -379,7 +390,13 @@ def apply_pick_qty_update(location_pick):
 def _iter_pl_item_batch_entries(pl_item):
     """Yield batch and qty pairs for a Pick List Item row."""
     if getattr(pl_item, "batch_no", None):
-        yield pl_item.batch_no, frappe.utils.flt(getattr(pl_item, "qty", 0))
+        # Yield in stock UOM, consistent with Serial and Batch Entry rows.
+        stock_qty = frappe.utils.flt(getattr(pl_item, "stock_qty", 0))
+        if not stock_qty:
+            stock_qty = frappe.utils.flt(getattr(pl_item, "qty", 0)) * (
+                frappe.utils.flt(getattr(pl_item, "conversion_factor", 0)) or 1.0
+            )
+        yield pl_item.batch_no, stock_qty
         return
 
     bundle = getattr(pl_item, "serial_and_batch_bundle", None)

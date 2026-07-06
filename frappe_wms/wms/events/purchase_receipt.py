@@ -7,7 +7,6 @@ from frappe_wms.wms.events.utils import (
     get_qc_hold_location,
     get_cross_dock_location,
     add_location_qty,
-    deduct_location_qty,
 )
 
 
@@ -153,7 +152,7 @@ def on_submit(doc, method=None):
                         warehouse=warehouse,
                         storage_location=xdock_loc,
                         qty=qty,
-                        uom=item.uom,
+                        uom=getattr(item, "stock_uom", None) or item.uom,
                         ref_doctype="Purchase Receipt",
                         ref_name=doc.name,
                         movement_type="Cross-dock",
@@ -180,7 +179,7 @@ def on_submit(doc, method=None):
                         warehouse=warehouse,
                         storage_location=qc_loc,
                         qty=qty,
-                        uom=item.uom,
+                        uom=getattr(item, "stock_uom", None) or item.uom,
                         ref_doctype="Purchase Receipt",
                         ref_name=doc.name,
                         movement_type="Inbound",
@@ -205,7 +204,7 @@ def on_submit(doc, method=None):
                 warehouse=warehouse,
                 storage_location=receiving_loc,
                 qty=qty,
-                uom=item.uom,
+                uom=getattr(item, "stock_uom", None) or item.uom,
                 ref_doctype="Purchase Receipt",
                 ref_name=doc.name,
                 movement_type="Inbound",
@@ -219,62 +218,20 @@ def on_submit(doc, method=None):
 
 
 def on_cancel(doc, method=None):
-    if not frappe.db.get_single_value("WMS Settings", "auto_create_on_receipt"):
-        return
+    # Reverse exactly the movements this document created, instead of
+    # re-deriving where the stock "should" be. Runs regardless of the
+    # auto_create_on_receipt setting: if no movements exist, it is a no-op,
+    # and if the setting was toggled off after submission we still reverse.
+    from frappe_wms.wms.events.utils import reverse_reference_movements
 
-    for item in doc.items:
-        warehouse = item.warehouse or doc.set_warehouse
-        if not warehouse:
-            continue
-
-        require_qc = item.get("wms_require_qc") or 0
-        cross_dock_so = _get_cross_dock_so(item)
-
-        # Determine the location where items were placed
-        if cross_dock_so:
-            loc = get_cross_dock_location(warehouse, raise_if_missing=False)
-        elif require_qc:
-            loc = get_qc_hold_location(warehouse, raise_if_missing=False)
-        else:
-            loc = get_receiving_location(warehouse, raise_if_missing=False)
-
-        if not loc:
-            continue
-
-        for batch_no, qty in iter_batch_entries(item):
-            # Check how much is still available on the expected location
-            available = (
-                frappe.db.get_value(
-                    "Batch Location Stock",
-                    {
-                        "item_code": item.item_code,
-                        "batch_no": batch_no,
-                        "warehouse": warehouse,
-                        "storage_location": loc,
-                    },
-                    "qty",
-                )
-                or 0.0
-            )
-            deduct_qty = min(qty, available)
-            if deduct_qty <= 0.001:
-                continue
-
-            deduct_location_qty(
-                item_code=item.item_code,
-                batch_no=batch_no,
-                warehouse=warehouse,
-                storage_location=loc,
-                qty=deduct_qty,
-                ref_doctype="Purchase Receipt Cancel",
-                ref_name=doc.name,
-                movement_type="Inbound",
-            )
+    reverse_reference_movements("Purchase Receipt", doc.name)
 
 
 @frappe.whitelist()
 def get_open_sales_orders(customer, item_code=None):
     """Return open Sales Orders for a customer, optionally filtered by item."""
+    frappe.has_permission("Sales Order", "read", throw=True)
+
     filters = {
         "customer": customer,
         "docstatus": 1,
